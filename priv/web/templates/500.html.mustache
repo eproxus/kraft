@@ -1,0 +1,29 @@
+{{> layouts/header.html }}
+
+  <div class="p-6 bg-white rounded-md shadow-xl border-l-8 border-red-600">
+
+    <h1 class="text-2xl mb-4">500 Internal Server Error</h1>
+
+    <div class="grid grid-flow-row sm:grid-cols-2 gap-2 w-max mb-6">
+      <div class="sm:justify-self-end">Method</div>
+      <div class="font-mono text-gray-500">{{req.method}}</div>
+      <div class="sm:justify-self-end">Path</div>
+      <div class="font-mono text-gray-500">{{req.url}}</div>
+    </div>
+
+    <div class="font-mono rounded bg-red-300 p-3 text-gray-500 mb-3">
+      {{exception.class}}:{{exception.reason}}
+    </div>
+
+    <div class="font-mono rounded shadow-inner bg-gray-100 p-3 text-gray-500 overflow-x-scroll">
+    {{#exception.stacktrace}}
+      <div class="mb-2">
+      {{module}}:{{function}}{{#arity}}/{{arity}}{{/arity}}{{^arity}}({{#args}}{{.}}, {{/args}}){{/arity}}
+      </div>
+    {{/exception.stacktrace}}
+    </div>
+
+    </div>
+  </div>
+
+{{> layouts/footer.html }}
