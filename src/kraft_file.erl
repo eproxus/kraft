@@ -3,6 +3,7 @@
 % API
 -export([path/2]).
 -export([path/3]).
+-export([relative/2]).
 
 %--- API -----------------------------------------------------------------------
 
@@ -13,6 +14,12 @@ path(App, template, File) ->
     filename:join([path(App, template), File ++ ".mustache"]);
 path(App, static, File) ->
     filename:join([path(App, static), File]).
+
+relative(App, Path) ->
+    case string:prefix(Path, priv_dir(App) ++ "/") of
+        nomatch -> error({invalid_app_path, App, Path});
+        Relative -> filename:join("priv", Relative)
+    end.
 
 %--- Internal ------------------------------------------------------------------
 
