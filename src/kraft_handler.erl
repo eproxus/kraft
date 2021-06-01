@@ -18,7 +18,7 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
                 },
                 exception => #{
                     class => Class,
-                    reason => Reason,
+                    reason => io_lib:format("~p", [Reason]),
                     stacktrace => format_stacktrace(Stacktrace)
                 }
             }),
