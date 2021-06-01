@@ -10,9 +10,14 @@
 start(Opts) -> start(Opts, []).
 
 start(#{port := Port} = Opts, Routes) ->
-    App = case application:get_application() of
-        undefined -> maps:get(app, Opts);
-        {ok, A} ->A
+    App = case maps:find(app, Opts) of
+        error ->
+            case application:get_application() of
+                undefined -> error(could_not_determine_app);
+                {ok, A} -> A
+            end;
+        {ok, A} ->
+            A
     end,
     Static = static_routes(App),
     Dispatch = cowboy_router:compile([
