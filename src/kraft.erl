@@ -3,6 +3,7 @@
 % API
 -export([start/1]).
 -export([start/2]).
+-export([stop/0]).
 -export([render/3]).
 
 %--- API -----------------------------------------------------------------------
@@ -34,6 +35,13 @@ start(#{port := Port} = Opts, Routes) ->
         #{env => #{dispatch => {persistent_term, {kraft_dispatch, App}}}}
     ),
     ok.
+
+stop() ->
+    App = case application:get_application() of
+        undefined -> error(cannot_determine_app);
+        {ok, A} ->A
+    end,
+    cowboy:stop_listener(listener_name(App)).
 
 render({Req, #{app := App} = State}, Template, Context) ->
     Headers = #{<<"content-type">> => <<"text/html">>},
