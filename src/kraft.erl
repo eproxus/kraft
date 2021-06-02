@@ -20,12 +20,10 @@ start(#{port := Port} = Opts, Routes) ->
         {ok, A} ->
             A
     end,
-    Static = static_routes(App),
     Dispatch = cowboy_router:compile([
         {'_', lists:flatten([
             {"/assets/kraft/kraft.css", cowboy_static, {priv_file, kraft, "web/static/assets/styles/kraft.css"}},
-            [{Path, kraft_handler, #{handler => Handler, app => App}} || {Path, Handler} <- Routes],
-            Static
+            routes(App, Routes)
         ])}
     ]),
     persistent_term:put({kraft_dispatch, App}, Dispatch),
@@ -58,14 +56,25 @@ render({Req, #{app := App} = State}, Template, Context) ->
 
 %--- Internal ------------------------------------------------------------------
 
-static_routes(App) ->
+listener_name(App) ->
+    list_to_atom("kraft_listener_" ++ atom_to_list(App)).
+
+routes(App, Routes) ->
+    lists:flatmap(fun(R) -> route(R, App)end, Routes).
+
+route({Path, kraft_static, _Opts}, App) ->
+    Default = [{Path ++ "[...]", cowboy_static, {priv_dir, App, "web/static"}}],
     Static = kraft_file:path(App, static),
     filelib:fold_files(Static, <<".*">>, true, fun(File, Acc) ->
-        Path = string:prefix(File, Static),
-        PrivFile = {priv_file, App, ["web/static", Path]},
-        Acc2 = case filename:basename(Path) of
-            "index.html" -> [{filename:dirname(Path), cowboy_static, PrivFile}|Acc];
-            _ -> Acc
+        Prefix = string:prefix(File, Static),
+        PrivFile = {priv_file, App, ["web/static", Prefix]},
+        Acc2 = case filename:basename(Prefix) of
+            "index.html" ->
+                [{filename:dirname(Prefix), cowboy_static, PrivFile}|Acc];
+            _ ->
+                Acc
         end,
-        [{["/", Path], cowboy_static, PrivFile}|Acc2]
-    end, []).
+        [{[Path, Prefix], cowboy_static, PrivFile}|Acc2]
+    end, Default);
+route({Path, Handler, Opts}, App) ->
+    [{Path, kraft_handler, #{handler => Handler, app => App, opts => Opts}}].
