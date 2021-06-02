@@ -9,7 +9,7 @@
 
 init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
     try
-        Handler:init({Req, State})
+        Handler:init({Req, State}, maps:get(bindings, Req, #{}))
     catch
         Class:Reason:Stacktrace ->
             Headers = #{<<"content-type">> => <<"text/html">>},

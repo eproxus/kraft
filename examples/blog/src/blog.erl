@@ -2,6 +2,9 @@
 
 -behaviour(application).
 
+% API
+-export([global_vars/1]).
+
 % Callbacks
 -export([start/2]).
 -export([stop/1]).
@@ -12,6 +15,8 @@ start(_StartType, _StartArgs) ->
     create_posts(),
     kraft:start(#{port => 8091}, [
         {"/", blog_index, #{}},
+        {"/posts/:id", blog_post, #{}},
+        {"/pages/:id", blog_page, #{}},
         {"/", kraft_static, #{}}
     ]),
     blog_sup:start_link().
@@ -19,19 +24,25 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
+global_vars(Extra) ->
+    Meta = maps:from_list(ets:tab2list(blog_meta)),
+    maps:merge(Meta#{
+        pages => [Page#{id => ID} || {ID, Page} <- ets:tab2list(blog_pages)]
+    }, Extra).
+
 %--- Internal ------------------------------------------------------------------
 
 create_posts() ->
     ets:new(blog_meta, [named_table]),
     ets:insert(blog_meta, [
-        {author, "Adam Lindberg"},
-        {email, "hello@alind.io"},
-        {description, "My personal blog."}
+        {blog_title, "My Blog"},
+        {blog_subtitle, "My personal blog."},
+        {blog_author, "Erlang Shen"}
     ]),
 
     ets:new(blog_pages, [named_table]),
     ets:insert(blog_pages, [
-        {1, #{
+        {"about", #{
             title => "About",
             content => "I'm a blogger."
         }}
@@ -55,3 +66,4 @@ create_posts() ->
             content => "I had more to say."
         }}
     ]).
+

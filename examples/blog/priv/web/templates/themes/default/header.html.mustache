@@ -5,12 +5,25 @@
 
   <meta charset="utf-8">
 
-  <title>{{title}}</title>
-  <meta name="description" content="{{title}}">
-  <meta name="author" content="{{author}}">
+  <title>{{blog_title}}</title>
+  <meta name="description" content="{{blog_subtitle}}">
+  <meta name="author" content="{{blog_author}}">
 
   <link href="/assets/styles.css" rel="stylesheet">
 
 </head>
 
-<body>
+<body class="container max-w-3xl mx-auto p-6 bg-gray-50">
+
+<div class="p-6">
+  <h1 class="mb-4">
+    <span class="text-2xl">{{blog_title}}</span>
+    <span class="pl-2 text-1xl text-gray-500">by {{blog_author}}</span>
+  </h1>
+  <nav class="space-x-2">
+    <a href="/" class="hover:underline">Home</a>
+    {{#pages}}
+    <a href="/pages/{{id}}/" class="hover:underline">{{title}}</a>
+    {{/pages}}
+  </nav>
+</div>
