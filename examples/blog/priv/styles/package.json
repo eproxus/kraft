@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "postcss": "^8.1.0",
+    "autoprefixer": "^10.2.5",
+    "tailwindcss": "^2.1.2"
+  }
+}

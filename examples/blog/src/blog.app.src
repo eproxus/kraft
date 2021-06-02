@@ -1,0 +1,15 @@
+{application, blog, [{description, "A Kraft blog"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {blog, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        kraft
+    ]},
+    {env,[]},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
