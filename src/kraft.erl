@@ -25,14 +25,20 @@ start(#{port := Port} = Opts, Routes) ->
         {'_', lists:flatten([
             {"/assets/kraft/kraft.css", cowboy_static, {priv_file, kraft, "web/static/assets/styles/kraft.css"}},
             [{Path, kraft_handler, #{handler => Handler, app => App}} || {Path, Handler} <- Routes],
-            Static,
-            {"/[...]", kraft_fallback_handler, []}
+            Static
         ])}
     ]),
     persistent_term:put({kraft_dispatch, App}, Dispatch),
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, Port}],
-        #{env => #{dispatch => {persistent_term, {kraft_dispatch, App}}}}
+        #{
+            env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
+            stream_handlers => [
+                kraft_fallback_h,
+                cowboy_compress_h,
+                cowboy_stream_h
+            ]
+        }
     ),
     ok.
 
