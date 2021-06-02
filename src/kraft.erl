@@ -22,8 +22,7 @@ start(#{port := Port} = Opts, Routes) ->
     end,
     Dispatch = cowboy_router:compile([
         {'_', lists:flatten([
-            {"/assets/kraft/kraft.css", cowboy_static, {priv_file, kraft, "web/static/assets/styles/kraft.css"}},
-            routes(App, Routes)
+            routes(App, [{"/kraft", kraft_static, #{app => kraft}}|Routes])
         ])}
     ]),
     persistent_term:put({kraft_dispatch, App}, Dispatch),
@@ -62,7 +61,14 @@ listener_name(App) ->
 routes(App, Routes) ->
     lists:flatmap(fun(R) -> route(R, App)end, Routes).
 
+route({Path, kraft_static, #{app := App}}, _App) ->
+    static_routes(App, Path);
 route({Path, kraft_static, _Opts}, App) ->
+    static_routes(App, Path);
+route({Path, Handler, Opts}, App) ->
+    [{Path, kraft_handler, #{handler => Handler, app => App, opts => Opts}}].
+
+static_routes(App, Path) ->
     Default = [{Path ++ "[...]", cowboy_static, {priv_dir, App, "web/static"}}],
     Static = kraft_file:path(App, static),
     filelib:fold_files(Static, <<".*">>, true, fun(File, Acc) ->
@@ -75,6 +81,4 @@ route({Path, kraft_static, _Opts}, App) ->
                 Acc
         end,
         [{[Path, Prefix], cowboy_static, PrivFile}|Acc2]
-    end, Default);
-route({Path, Handler, Opts}, App) ->
-    [{Path, kraft_handler, #{handler => Handler, app => App, opts => Opts}}].
+    end, Default).
