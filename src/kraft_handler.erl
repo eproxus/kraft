@@ -31,7 +31,7 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
 format_stacktrace(Stacktrace) ->
     lists:map(fun format_stacktrace_entry/1, Stacktrace).
 
-format_stacktrace_entry({M, F, Arity, Loc}) when is_integer(Arity) ->
+format_stacktrace_entry({M, F, Arity, _Loc}) when is_integer(Arity) ->
     #{module => M, function => F, arity => Arity};
-format_stacktrace_entry({M, F, Args, Loc}) ->
+format_stacktrace_entry({M, F, Args, _Loc}) ->
     #{module => M, function => F, args => [io_lib:format("~p", [A]) || A <- Args]}.
