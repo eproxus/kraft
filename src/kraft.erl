@@ -29,7 +29,7 @@ start(#{port := Port} = Opts, Routes) ->
         ])}
     ]),
     persistent_term:put({kraft_dispatch, App}, Dispatch),
-    {ok, _} = cowboy:start_clear(my_http_listener,
+    {ok, Pid} = cowboy:start_clear(listener_name(App),
         [{port, Port}],
         #{
             env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
@@ -40,6 +40,7 @@ start(#{port := Port} = Opts, Routes) ->
             ]
         }
     ),
+    link(Pid),
     ok.
 
 stop() ->
