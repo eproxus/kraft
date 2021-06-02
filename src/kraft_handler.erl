@@ -1,5 +1,7 @@
 -module(kraft_handler).
 
+-behaviour(cowboy_handler).
+
 % API
 -export([init/2]).
 
