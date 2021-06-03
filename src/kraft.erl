@@ -66,7 +66,7 @@ route({Path, kraft_static, #{app := App}}, _App) ->
 route({Path, kraft_static, _Opts}, App) ->
     static_routes(App, Path);
 route({Path, Handler, Opts}, App) ->
-    [{Path, kraft_handler, #{handler => Handler, app => App, opts => Opts}}].
+    [{Path, kraft_controller, #{handler => Handler, app => App, opts => Opts}}].
 
 static_routes(App, Path) ->
     Default = [{Path ++ "[...]", cowboy_static, {priv_dir, App, "web/static"}}],
