@@ -8,6 +8,8 @@
 %--- API -----------------------------------------------------------------------
 
 init(Conn, #{id := ID}) ->
-    kraft:render(Conn, "post.html",
-        blog:global_vars(ets:lookup_element(blog_posts, binary_to_integer(ID), 2))
-    ).
+    {200, #{}, kraft:render(Conn, "post.html",
+        blog:global_vars(
+            ets:lookup_element(blog_posts, binary_to_integer(ID), 2)
+        )
+    )}.

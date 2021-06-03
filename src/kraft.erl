@@ -47,11 +47,9 @@ stop() ->
     end,
     cowboy:stop_listener(listener_name(App)).
 
-render({Req, #{app := App} = State}, Template, Context) ->
-    Headers = #{<<"content-type">> => <<"text/html">>},
+render({_Req, #{app := App}}, Template, Context) ->
     Body = kraft_template:render(App, Template, Context),
-    Resp = cowboy_req:reply(200, Headers, Body, Req),
-    {ok, Resp, State}.
+    {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body}.
 
 %--- Internal ------------------------------------------------------------------
 

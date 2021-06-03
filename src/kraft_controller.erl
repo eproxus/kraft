@@ -16,11 +16,16 @@
 
 init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
     try
-        Handler:init({Req, State}, maps:get(bindings, Req, #{}))
+        {Code, Headers, Body} = case Handler:init({Req, State}, maps:get(bindings, Req, #{})) of
+            {C, H, {kraft_template, TH, B}} -> {C, maps:merge(TH, H), B};
+            {C, H, B} when is_binary(B) -> {C, H, B}
+        end,
+        Resp = cowboy_req:reply(Code, Headers, Body, Req),
+        {ok, Resp, State}
     catch
         Class:Reason:Stacktrace ->
-            Headers = #{<<"content-type">> => <<"text/html">>},
-            Body = kraft_template:render(kraft, "500.html", #{
+            EHeaders = #{<<"content-type">> => <<"text/html">>},
+            EBody = kraft_template:render(kraft, "500.html", #{
                 req => #{
                     url => Path,
                     method => Method
@@ -31,8 +36,8 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
                     stacktrace => format_stacktrace(Stacktrace)
                 }
             }),
-            Resp = cowboy_req:reply(500, Headers, Body, Req),
-            {ok, Resp, State}
+            EResp = cowboy_req:reply(500, EHeaders, EBody, Req),
+            {ok, EResp, State}
     end.
 
 %--- Internal ------------------------------------------------------------------

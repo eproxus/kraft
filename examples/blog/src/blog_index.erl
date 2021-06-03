@@ -8,6 +8,6 @@
 %--- API -----------------------------------------------------------------------
 
 init(Conn, _Params) ->
-    kraft:render(Conn, "index.html", blog:global_vars(#{
+    {200, #{}, kraft:render(Conn, "index.html", blog:global_vars(#{
         posts => [Post#{id => ID} || {ID, Post} <- ets:tab2list(blog_posts)]
-    })).
+    }))}.
