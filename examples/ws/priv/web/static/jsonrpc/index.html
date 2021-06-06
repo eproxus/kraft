@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+    <title>Kraft JSON WebSocket Demo</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+<h1>Kraft JSON-RPC WebSocket Demo</h1>
+<p>To see web socket communication, open the JavaScript console.</p>
+
+<script type="text/javascript">
+// Create WebSocket connection.
+const socket = new WebSocket('ws://localhost:8092/jsonrpc/ws');
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "foobar"}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "foobar", "id": "1"}
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]
+    `);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": 1, "params": "bar"}
+    `);
+    socket.send(`[
+      {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+      {"jsonrpc": "2.0", "method"
+    ]`);
+    socket.send(`[]`);
+    socket.send(`[1]`);
+    socket.send(`[1,2,3]`);
+    socket.send(`[
+        {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+        {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
+        {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+        {"foo": "boo"},
+        {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+        {"jsonrpc": "2.0", "method": "get_data", "id": "9"}
+    ]`);
+    socket.send(`
+        {"jsonrpc": "2.0", "method": "async", "id": 99}
+    `);
+});
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', JSON.parse(event.data));
+});
+</script>
+
+</body>
+</html>

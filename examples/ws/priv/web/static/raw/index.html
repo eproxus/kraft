@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <title>Kraft Raw WebSocket Demo</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+<h1>Kraft Raw WebSocket Demo</h1>
+<p>To see web socket communication, open the JavaScript console.</p>
+
+<script type="text/javascript">
+// Create WebSocket connection.
+const socket = new WebSocket('ws://localhost:8092/raw/ws');
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+    data = 'Hello Server!';
+    console.log('Message to server ', data)
+    socket.send(data);
+});
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data);
+});
+</script>
+
+</body>
+</html>

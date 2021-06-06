@@ -59,6 +59,15 @@ listener_name(App) ->
 routes(App, Routes) ->
     lists:flatmap(fun(R) -> route(R, App)end, Routes).
 
+route({Path, {ws, Handler}, State}, App) ->
+    route({Path, {ws, Handler}, State, #{}}, App);
+route({Path, {ws, Handler}, State, Opts}, App) ->
+    [{Path, kraft_ws_util:module(Opts), #{
+        opts => Opts,
+        app => App,
+        handler => Handler,
+        state => State
+    }}];
 route({Path, kraft_static, #{app := App}}, _App) ->
     static_routes(App, Path);
 route({Path, kraft_static, _Opts}, App) ->

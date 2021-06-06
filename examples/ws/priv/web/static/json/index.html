@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+    <title>Kraft JSON WebSocket Demo</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+<h1>Kraft JSON WebSocket Demo</h1>
+<p>To see web socket communication, open the JavaScript console.</p>
+
+<script type="text/javascript">
+// Create WebSocket connection.
+const socket = new WebSocket('ws://localhost:8092/json/ws');
+
+// Connection opened
+socket.addEventListener('open', function (event) {
+    socket.send(JSON.stringify({msg: "Hello Server!"}));
+});
+
+// Listen for messages
+socket.addEventListener('message', function (event) {
+    console.log('Message from server ', JSON.parse(event.data));
+});
+</script>
+
+</body>
+</html>

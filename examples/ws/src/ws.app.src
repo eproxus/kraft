@@ -1,14 +1,11 @@
-{application, kraft, [
-    {description, "An OTP application"},
+{application, ws, [{description, "A Kraft web socket example"},
     {vsn, "0.1.0"},
     {registered, []},
-    {mod, {kraft_app, []}},
+    {mod, {ws, []}},
     {applications, [
         kernel,
         stdlib,
-        cowboy,
-        bbmustache,
-        jsone
+        kraft
     ]},
     {env,[]},
     {modules, []},
