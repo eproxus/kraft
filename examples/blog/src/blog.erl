@@ -66,4 +66,3 @@ create_posts() ->
             content => "I had more to say."
         }}
     ]).
-
