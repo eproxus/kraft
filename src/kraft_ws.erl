@@ -15,20 +15,27 @@
 -type state() :: any().
 -type frame() :: ping | pong | {text | binary | ping | pong, binary()}.
 
+-optional_callbacks([handshake/3]).
+-callback handshake(kraft:conn(), kraft:params(), state()) ->
+    {reply, kraft:status(), kraft:headers(), kraft:body()} |
+    {ok, state()}.
+
 -callback init(state()) -> {commands(), state()}.
+
 -callback handle(frame(), state()) -> {commands(), state()}.
--callback info(any(), state()) -> {commands(), state()}.
+
 -optional_callbacks([info/2]).
+-callback info(any(), state()) -> {commands(), state()}.
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(Req, #{handler := Handler} = State) ->
-    {cowboy_websocket, Req, State#{
-        callbacks => kraft_ws_util:callbacks(Handler, [
-            {info, 2},
-            {terminate, 2}
-        ])
-    }}.
+init(Req, State0) ->
+    State1 = kraft_ws_util:callbacks([
+        {handshake, 3},
+        {info, 2},
+        {terminate, 2}
+    ], State0),
+    kraft_ws_util:handshake(Req, State1).
 
 websocket_init(State) ->
     call(init, [], State).

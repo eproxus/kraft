@@ -3,16 +3,30 @@
 % API
 -export([module/1]).
 -export([callbacks/2]).
+-export([handshake/2]).
 
 %--- API -----------------------------------------------------------------------
 
 module(Opts) ->
     module1(maps:merge(#{type => raw}, Opts)).
 
-callbacks(Module, Callbacks) ->
-    lists:foldl(fun(C, Cs) ->
-        maps:put(C, lists:member(C, Module:module_info(exports)), Cs)
-    end, #{}, Callbacks).
+callbacks(Callbacks, #{handler := Handler} = State0) ->
+    Exported = lists:foldl(fun(C, Cs) ->
+        maps:put(C, lists:member(C, Handler:module_info(exports)), Cs)
+    end, #{}, Callbacks),
+    State0#{callbacks => Exported}.
+
+handshake(Req, #{callbacks := #{{handshake, 3} := false}} = State) ->
+    {cowboy_websocket, Req, State};
+handshake(Req, #{handler := Handler, state := MState0} = State) ->
+    Conn = kraft_conn:new(Req, State),
+    case Handler:handshake({Req, MState0}, kraft_conn:params(Conn), MState0) of
+        {reply, Code, Headers, Body} ->
+            Resp = cowboy_req:reply(Code, Headers, Body, Req),
+            {ok, Resp, State};
+        {ok, MState1} ->
+            {cowboy_websocket, Req, State#{state => MState1}}
+    end.
 
 %--- Internal ------------------------------------------------------------------
 

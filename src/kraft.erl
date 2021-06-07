@@ -6,6 +6,20 @@
 -export([stop/0]).
 -export([render/3]).
 
+%--- Types ---------------------------------------------------------------------
+
+-export_type([status/0]).
+-export_type([headers/0]).
+-export_type([body/0]).
+-export_type([conn/0]).
+-export_type([params/0]).
+
+-type status() :: cowboy:http_status().
+-type headers() :: cowboy:http_headers().
+-type body() :: cowboy_req:resp_body().
+-type conn() :: kraft_conn:conn().
+-type params() :: map:map().
+
 %--- API -----------------------------------------------------------------------
 
 start(Opts) -> start(Opts, []).

@@ -7,20 +7,19 @@
 
 %--- Types ---------------------------------------------------------------------
 
--type conn() :: {cowboy_req:req(), any()}.
--type params() :: map:map().
-
--callback init(conn(), params()) -> ok.
+-callback init(kraft:conn(), kraft:params()) ->
+    {kraft:status(), kraft:headers(), kraft:body()}.
 
 %--- API -----------------------------------------------------------------------
 
 init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
     try
-        {Code, Headers, Body} = case Handler:init({Req, State}, maps:get(bindings, Req, #{})) of
+        Conn = kraft_conn:new(Req, State),
+        {Status, Headers, Body} = case Handler:init({Req, State}, kraft_conn:params(Conn)) of
             {C, H, {kraft_template, TH, B}} -> {C, maps:merge(TH, H), B};
             {C, H, B} when is_binary(B) -> {C, H, B}
         end,
-        Resp = cowboy_req:reply(Code, Headers, Body, Req),
+        Resp = cowboy_req:reply(Status, Headers, Body, Req),
         {ok, Resp, State}
     catch
         Class:Reason:Stacktrace ->
