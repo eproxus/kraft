@@ -1,4 +1,4 @@
-# Kraft Blog
+# Kraft Blog Example
 
 An example blog implemented with Kraft.
 
@@ -16,11 +16,3 @@ cd priv/styles
 yarn
 npx tailwindcss build styles.css -o ../static/assets/styles.css
 ```
-
-## Start
-
-```
-rebar3 shell
-```
-
-Blog will run at http://localhost:8091.

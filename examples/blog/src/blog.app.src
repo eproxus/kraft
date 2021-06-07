@@ -1,4 +1,5 @@
-{application, blog, [{description, "A Kraft blog"},
+{application, blog, [
+    {description, "A blog example in Kraft"},
     {vsn, "0.1.0"},
     {registered, []},
     {mod, {blog, []}},
