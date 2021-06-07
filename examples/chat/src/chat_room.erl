@@ -22,7 +22,7 @@ info({message, From, Message}, State) ->
     Vars = #{message => Message, user => From},
     {[{text, kraft:render(chat, "message.html", Vars)}], State}.
 
-terminate(_Reason, State) ->
+terminate(_Reason, _State) ->
     send_message("[left]").
 
 %--- Internal ------------------------------------------------------------------
