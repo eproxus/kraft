@@ -7,6 +7,7 @@
 -export([websocket_init/1]).
 -export([websocket_handle/2]).
 -export([websocket_info/2]).
+-export([terminate/3]).
 
 %--- Types ---------------------------------------------------------------------
 
@@ -23,7 +24,10 @@
 
 init(Req, #{handler := Handler} = State) ->
     {cowboy_websocket, Req, State#{
-        callbacks => kraft_ws_util:callbacks(Handler, [{info, 2}])
+        callbacks => kraft_ws_util:callbacks(Handler, [
+            {info, 2},
+            {terminate, 2}
+        ])
     }}.
 
 websocket_init(State) ->
@@ -34,6 +38,12 @@ websocket_handle(Frame, State) ->
 
 websocket_info(Info, State) ->
     call(info, [Info], State).
+
+terminate(_Reason, _Req, #{callbacks := #{{terminate, 2} := false}}) ->
+    ok;
+terminate(Reason, _Req, #{handler := Handler, state := MState0}) ->
+    Handler:terminate(Reason, MState0),
+    ok.
 
 %--- API -----------------------------------------------------------------------
 
