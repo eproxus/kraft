@@ -10,13 +10,15 @@
 
 %--- Types ---------------------------------------------------------------------
 
--type result() :: {result, any(), kraft_jsonrpc:id()}.
--type results() :: [result()].
 -type state() :: any().
 
--callback init(state()) -> state().
--callback message(kraft_jsonrpc:message(), state()) -> {results(), state()}.
--callback info(any(), state()) -> {results(), state()}.
+-callback init(state()) ->
+    state().
+-callback message(kraft_jsonrpc:message(), state()) ->
+    {[kraft_jsonrpc:message()], state()}.
+-callback info(any(), state()) ->
+    {[kraft_jsonrpc:message()], state()}.
+
 -optional_callbacks([info/2]).
 
 %--- Callbacks -----------------------------------------------------------------
