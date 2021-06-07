@@ -58,8 +58,10 @@ call(Func, Args, #{handler := Handler, state := MState0} = State0) ->
     {Commands, MState1} = erlang:apply(Handler, Func, Args ++ [MState0]),
     {[encode(C) || C <- Commands], State0#{state => MState1}}.
 
-encode({json, JSON}) ->
-    {text, jsone:encode(JSON)}.
+encode({json, JSON}) -> {text, jsone:encode(JSON)};
+encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};
+encode({text, Text}) -> {text, Text};
+encode({binary, Binary}) -> {binary, Binary}.
 
 decode(Binary) ->
     jsone:decode(Binary, [{keys, attempt_atom}]).

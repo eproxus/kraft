@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <title>Kraft Chat</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="/assets/scripts/htmx-1.4.1.min.js" integrity="sha384-1P2DfVFAJH2XsYTakfc6eNhTVtyio74YNA1tc6waJ0bO+IfaexSWXc2x62TgBcXe" crossorigin="anonymous"></script>
+  <script src="/assets/scripts/hyperscript-0.0.9.min.js"></script>
+</head>
+<body>
+
+<h1>Kraft Chat</h1>
+
+<div hx-ws="connect:/chatroom">
+  <div id="chat_room"></div>
+  <form hx-ws="send" _="on submit put '' into #chat_message.value">
+      <input id="chat_message" type="text" name="chat_message">
+  </form>
+</div>
+
+</body>
+</html>

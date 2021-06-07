@@ -1,0 +1,15 @@
+{application, chat, [
+    {description, "A chat example in Kraft"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {chat, []}},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {env,[]},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
