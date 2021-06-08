@@ -5,6 +5,9 @@
 -export([params/1]).
 -export([raw_request/1]).
 
+% Public API
+-ignore_xref({raw_request, 1}).
+
 %--- Types ---------------------------------------------------------------------
 
 -export_type([conn/0]).

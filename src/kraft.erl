@@ -6,6 +6,12 @@
 -export([stop/0]).
 -export([render/3]).
 
+% Public API
+-ignore_xref({start, 1}).
+-ignore_xref({render, 3}).
+-ignore_xref({start, 2}).
+-ignore_xref({stop, 0}).
+
 %--- Types ---------------------------------------------------------------------
 
 -export_type([status/0]).
