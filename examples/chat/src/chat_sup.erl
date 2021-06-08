@@ -16,6 +16,7 @@ start_link() ->
 %--- Callbacks -----------------------------------------------------------------
 
 init([]) ->
-    {ok, {#{}, [
+    Children = [
         #{id => chat, start => {pg, start_link, [chat]}}
-    ]}}.
+    ],
+    {ok, {#{}, Children}}.

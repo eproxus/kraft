@@ -15,8 +15,8 @@
 
 -optional_callbacks([handshake/3]).
 -callback handshake(kraft:conn(), kraft:params(), state()) ->
-    {reply, kraft:status(), kraft:headers(), kraft:body()} |
-    {ok, state()}.
+    {reply, kraft:status(), kraft:headers(), kraft:body()}
+    | {ok, state()}.
 
 -callback init(state()) ->
     state().
@@ -31,33 +31,22 @@
 %--- Callbacks -----------------------------------------------------------------
 
 init(Req, State0) ->
-    State1 = kraft_ws_util:callbacks([
-        {handshake, 3},
-        {info, 2},
-        {terminate, 2}
-    ], State0),
+    State1 = kraft_ws_util:callbacks(
+        [{handshake, 3}, {info, 2}, {terminate, 2}],
+        State0
+    ),
     kraft_ws_util:handshake(Req, State1).
 
 websocket_init(#{handler := Handler, state := MState0} = State0) ->
     {[], State0#{state => Handler:init(MState0)}}.
 
-websocket_handle({text, JSON}, #{handler := Handler, state := MState0} = State0) ->
-    case kraft_jsonrpc:decode(JSON) of
-        {single, {internal_error, _, _} = Error} ->
-            {[{text, kraft_jsonrpc:encode({single, kraft_jsonrpc:format_error(Error)})}], State0};
-        {batch, {internal_error, _, _} = Error} ->
-            {[{text, kraft_jsonrpc:encode({single, kraft_jsonrpc:format_error(Error)})}], State0};
-        {batch, Messages} ->
-            {Replies, State1} = handle_batch([unpack(M) || M <- Messages], State0),
-            {[{text, kraft_jsonrpc:encode({batch, Replies})}], State1};
-        {single, Message} ->
-            {Replies, MState1} = handle_message(Handler, unpack(Message), MState0),
-            {[{text, kraft_jsonrpc:encode({single, R})} || R <- Replies], State0#{state => MState1}}
-    end.
+websocket_handle({text, JSON}, State0) ->
+    {Replies, State1} = handle_input(kraft_jsonrpc:decode(JSON), State0),
+    {[encode(R) || R <- Replies], State1}.
 
-websocket_info(Info, #{handler := Handler, state := MState0, callbacks := #{{info, 2} := true}} = State0) ->
-    {Replies, MState1} = Handler:info(Info, MState0),
-    {[{text, kraft_jsonrpc:encode({single, R})} || R <- Replies], State0#{state => MState1}};
+websocket_info(Info, #{callbacks := #{{info, 2} := true}} = State0) ->
+    {Replies, State1} = call(info, [Info], State0),
+    {[encode(R) || R <- Replies], State1};
 websocket_info(_Info, State0) ->
     {[], State0}.
 
@@ -69,28 +58,49 @@ terminate(Reason, _Req, #{handler := Handler, state := MState0}) ->
 
 %--- Internal ------------------------------------------------------------------
 
-handle_batch(Messages, #{handler := Handler, state := MState0} = State0) ->
-    {Replies, MState3} = lists:foldl(fun
-        ({internal_error, _, _} = Error, {Rs, MState1}) ->
-            {[Rs, kraft_jsonrpc:format_error(Error)], MState1};
-        (Message, {Rs, MState1}) ->
-            {R, MState2} = handle_message(Handler, Message, MState1),
-            {[Rs, R], MState2}
-    end, {[], MState0}, Messages),
-    {lists:flatten(Replies), State0#{state => MState3}}.
+handle_input({batch, Batch}, State0) ->
+    handle_batch(Batch, State0);
+handle_input({single, Message}, State0) ->
+    handle_message(Message, State0).
 
-handle_message(Handler, Message, MState0) ->
+handle_batch({internal_error, _, _} = Error, State0) ->
+    {[kraft_jsonrpc:format_error(Error)], State0};
+handle_batch(Messages, State0) ->
+    Unpacked = [unpack(M) || M <- Messages],
+    {Replies, State3} = lists:foldl(
+        fun(Message, {Rs, State1}) ->
+            {R, State2} = handle_message(Message, State1),
+            {[Rs, R], State2}
+        end,
+        {[], State0},
+        Unpacked
+    ),
+    {[lists:flatten(Replies)], State3}.
+
+handle_message({internal_error, _, _} = Error, State0) ->
+    {[kraft_jsonrpc:format_error(Error)], State0};
+handle_message(Message, #{handler := Handler} = State0) ->
     try
-        Handler:message(Message, MState0)
+        call(message, [Message], State0)
     catch
         error:function_clause:ST ->
             case {Message, ST} of
-                {{call, _, _, _}, [{Handler, message, _, _}|_]} ->
-                    {[kraft_jsonrpc:format_error({internal_error, method_not_found, id(Message)})], MState0};
+                {{call, _, _, _}, [{Handler, message, _, _} | _]} ->
+                    {[error_reply(method_not_found, Message)], State0};
                 _Else ->
-                    {[], MState0}
+                    {[], State0}
             end
     end.
+
+call(Func, Args, #{handler := Handler, state := MState0} = State0) ->
+    {Replies, MState1} = erlang:apply(Handler, Func, Args ++ [MState0]),
+    {Replies, State0#{state => MState1}}.
+
+encode(Messages) ->
+    {text, kraft_jsonrpc:encode(Messages)}.
+
+error_reply(method_not_found, Message) ->
+    kraft_jsonrpc:format_error({internal_error, method_not_found, id(Message)}).
 
 unpack({call, Method, Params, ID}) ->
     {call, attempt_atom(Method), Params, ID};

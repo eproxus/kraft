@@ -15,10 +15,11 @@
 init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
     try
         Conn = kraft_conn:new(Req, State),
-        {Status, Headers, Body} = case Handler:init({Req, State}, kraft_conn:params(Conn)) of
-            {C, H, {kraft_template, TH, B}} -> {C, maps:merge(TH, H), B};
-            {C, H, B} when is_binary(B) -> {C, H, B}
-        end,
+        {Status, Headers, Body} =
+            case Handler:init({Req, State}, kraft_conn:params(Conn)) of
+                {C, H, {kraft_template, TH, B}} -> {C, maps:merge(TH, H), B};
+                {C, H, B} when is_binary(B) -> {C, H, B}
+            end,
         Resp = cowboy_req:reply(Status, Headers, Body, Req),
         {ok, Resp, State}
     catch
@@ -47,5 +48,8 @@ format_stacktrace(Stacktrace) ->
 format_stacktrace_entry({M, F, Arity, _Loc}) when is_integer(Arity) ->
     #{module => M, function => F, arity => Arity};
 format_stacktrace_entry({M, F, Args, _Loc}) ->
-    #{module => M, function => F, args => [io_lib:format("~p", [A]) || A <- Args]}.
-
+    #{
+        module => M,
+        function => F,
+        args => [io_lib:format("~p", [A]) || A <- Args]
+    }.

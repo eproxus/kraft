@@ -15,10 +15,10 @@
 -type error_message() :: binary().
 -type data() :: any().
 -type message() ::
-    {call, method(), params(), id()} |
-    {notification, method(), params()} |
-    {result, result(), id()} |
-    {error, code(), error_message(), data(), id()}.
+    {call, method(), params(), id()}
+    | {notification, method(), params()}
+    | {result, result(), id()}
+    | {error, code(), error_message(), data(), id()}.
 
 -export_type([message/0]).
 
@@ -55,10 +55,15 @@ decode(Binary) ->
             {single, {internal_error, parse_error, null}}
     end.
 
-encode({batch, Messages}) ->
+encode(Messages) when is_list(Messages) ->
     encode_json([pack(M) || M <- Messages]);
-encode({single, Message}) ->
+encode(Message) ->
     encode_json(pack(Message)).
+
+% encode({batch, Messages}) ->
+%     encode_json([pack(M) || M <- Messages]);
+% encode({single, Message}) ->
+%     encode_json(pack(Message)).
 
 format_error({internal_error, parse_error, ID}) ->
     {error, -32700, <<"Parse error">>, undefined, ID};
@@ -79,36 +84,46 @@ decode_json(Binary) ->
     catch
         error:badarg:ST ->
             case ST of
-                [Call|_] when element(1, Call) == jsone_decode ->
+                [Call | _] when element(1, Call) == jsone_decode ->
                     {error, parse_error};
                 _ ->
                     erlang:raise(error, badarg, ST)
             end
     end.
 
-unpack(#{method := Method, params := Params, id := ID} = M)
-  when ?is_valid(M), ?is_method(Method), ?is_params(Params) ->
+unpack(#{method := Method, params := Params, id := ID} = M) when
+    ?is_valid(M), ?is_method(Method), ?is_params(Params)
+->
     {call, Method, Params, ID};
-unpack(#{method := Method, id := ID} = M)
-  when ?is_valid(M), ?is_method(Method) ->
+unpack(#{method := Method, id := ID} = M) when
+    ?is_valid(M), ?is_method(Method)
+->
     {call, Method, undefined, ID};
-unpack(#{method := Method, params := Params} = M)
-  when ?is_valid(M), ?is_method(Method), ?is_params(Params) ->
+unpack(#{method := Method, params := Params} = M) when
+    ?is_valid(M), ?is_method(Method), ?is_params(Params)
+->
     {notification, Method, Params};
-unpack(#{method := Method} = M)
-  when ?is_valid(M), ?is_method(Method) ->
+unpack(#{method := Method} = M) when
+    ?is_valid(M), ?is_method(Method)
+->
     {notification, Method, undefined};
-unpack(#{method := Method, params := _Params, id := ID} = M)
-  when ?is_valid(M), ?is_method(Method) ->
+unpack(#{method := Method, params := _Params, id := ID} = M) when
+    ?is_valid(M), ?is_method(Method)
+->
     {internal_error, invalid_params, ID};
-unpack(#{result := Result, id := ID} = M)
-  when ?is_valid(M) ->
+unpack(#{result := Result, id := ID} = M) when
+    ?is_valid(M)
+->
     {result, Result, ID};
-unpack(#{error := #{code := Code, message := Message, data := Data}, id := ID} = M)
-  when ?is_valid(M) ->
+unpack(
+    #{error := #{code := Code, message := Message, data := Data}, id := ID} = M
+) when
+    ?is_valid(M)
+->
     {error, Code, Message, Data, ID};
-unpack(#{error := #{code := Code, message := Message}, id := ID} = M)
-  when ?is_valid(M) ->
+unpack(#{error := #{code := Code, message := Message}, id := ID} = M) when
+    ?is_valid(M)
+->
     {error, Code, Message, undefined, ID};
 unpack(M) ->
     {internal_error, invalid_request, id(M)}.
@@ -128,7 +143,10 @@ pack({error, Code, Message, undefined, undefined}) ->
 pack({error, Code, Message, undefined, ID}) ->
     #{?V, error => #{code => Code, message => Message}, id => ID};
 pack({error, Code, Message, Data, undefined}) ->
-    #{?V, error => #{code => Code, message => Message, data => Data, id => null}};
+    #{
+        ?V,
+        error => #{code => Code, message => Message, data => Data, id => null}
+    };
 pack({error, Code, Message, Data, ID}) ->
     #{?V, error => #{code => Code, message => Message, data => Data}, id => ID}.
 

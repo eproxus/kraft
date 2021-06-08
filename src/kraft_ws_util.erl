@@ -11,9 +11,10 @@ module(Opts) ->
     module1(maps:merge(#{type => raw}, Opts)).
 
 callbacks(Callbacks, #{handler := Handler} = State0) ->
-    Exported = lists:foldl(fun(C, Cs) ->
+    CheckCallback = fun(C, Cs) ->
         maps:put(C, lists:member(C, Handler:module_info(exports)), Cs)
-    end, #{}, Callbacks),
+    end,
+    Exported = lists:foldl(CheckCallback, #{}, Callbacks),
     State0#{callbacks => Exported}.
 
 handshake(Req, #{callbacks := #{{handshake, 3} := false}} = State) ->
@@ -30,11 +31,7 @@ handshake(Req, #{handler := Handler, state := MState0} = State) ->
 
 %--- Internal ------------------------------------------------------------------
 
-module1(#{type := raw}) ->
-    kraft_ws;
-module1(#{type := json}) ->
-    kraft_ws_json;
-module1(#{type := json_rpc}) ->
-    kraft_ws_jsonrpc;
-module1(#{type := Other}) ->
-    error({invalid_kraft_ws_type, Other}).
+module1(#{type := raw}) -> kraft_ws;
+module1(#{type := json}) -> kraft_ws_json;
+module1(#{type := json_rpc}) -> kraft_ws_jsonrpc;
+module1(#{type := Other}) -> error({invalid_kraft_ws_type, Other}).

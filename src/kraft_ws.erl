@@ -17,8 +17,8 @@
 
 -optional_callbacks([handshake/3]).
 -callback handshake(kraft:conn(), kraft:params(), state()) ->
-    {reply, kraft:status(), kraft:headers(), kraft:body()} |
-    {ok, state()}.
+    {reply, kraft:status(), kraft:headers(), kraft:body()}
+    | {ok, state()}.
 
 -callback init(state()) -> {commands(), state()}.
 
@@ -30,11 +30,10 @@
 %--- Callbacks -----------------------------------------------------------------
 
 init(Req, State0) ->
-    State1 = kraft_ws_util:callbacks([
-        {handshake, 3},
-        {info, 2},
-        {terminate, 2}
-    ], State0),
+    State1 = kraft_ws_util:callbacks(
+        [{handshake, 3}, {info, 2}, {terminate, 2}],
+        State0
+    ),
     kraft_ws_util:handshake(Req, State1).
 
 websocket_init(State) ->

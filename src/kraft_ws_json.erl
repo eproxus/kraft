@@ -21,8 +21,8 @@
 
 -optional_callbacks([handshake/3]).
 -callback handshake(kraft:conn(), kraft:params(), state()) ->
-    {reply, kraft:status(), kraft:headers(), kraft:body()} |
-    {ok, state()}.
+    {reply, kraft:status(), kraft:headers(), kraft:body()}
+    | {ok, state()}.
 
 -callback init(state()) -> {commands(), state()}.
 
@@ -34,11 +34,10 @@
 %--- Callbacks -----------------------------------------------------------------
 
 init(Req, State0) ->
-    State1 = kraft_ws_util:callbacks([
-        {handshake, 3},
-        {info, 2},
-        {terminate, 2}
-    ], State0),
+    State1 = kraft_ws_util:callbacks(
+        [{handshake, 3}, {info, 2}, {terminate, 2}],
+        State0
+    ),
     kraft_ws_util:handshake(Req, State1).
 
 websocket_init(State) ->
@@ -50,7 +49,7 @@ websocket_handle({text, Data}, State) ->
     catch
         error:badarg:ST ->
             case ST of
-                [{jsone_decode,_,_,_}|_] ->
+                [{jsone_decode, _, _, _} | _] ->
                     ?LOG_WARNING("Bad JSON received: ~p", [cut(Data, 20)]),
                     {[], State};
                 _ ->

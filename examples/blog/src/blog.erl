@@ -24,11 +24,10 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
-global_vars(Extra) ->
+global_vars(Vars) ->
     Meta = maps:from_list(ets:tab2list(blog_meta)),
-    maps:merge(Meta#{
-        pages => [Page#{id => ID} || {ID, Page} <- ets:tab2list(blog_pages)]
-    }, Extra).
+    Pages = [Page#{id => ID} || {ID, Page} <- ets:tab2list(blog_pages)],
+    maps:merge(Meta#{pages => Pages}, Vars).
 
 %--- Internal ------------------------------------------------------------------
 
