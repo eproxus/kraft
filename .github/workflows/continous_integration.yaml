@@ -24,10 +24,13 @@ jobs:
       - name: Cache Rebar 3
         uses: actions/cache@v2
         env:
-          cache-name: cache-rebar3
+          cache-name: rebar3
         with:
           path: ~/.cache/rebar3
-          key: ${{runner.os}}-build-${{env.cache-name}}-${{hashFiles('rebar.lock')}}
+          key: ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}-${{hashFiles('rebar.lock')}}
+          restore-keys: |
+            ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}
+            ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}
 
       - name: Compile
         run: rebar3 compile
