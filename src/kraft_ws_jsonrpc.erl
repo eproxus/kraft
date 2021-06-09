@@ -41,7 +41,7 @@ websocket_init(#{handler := Handler, state := MState0} = State0) ->
     {[], State0#{state => Handler:init(MState0)}}.
 
 websocket_handle({text, JSON}, State0) ->
-    {Replies, State1} = handle_input(kraft_jsonrpc:decode(JSON), State0),
+    {Replies, State1} = handle_messages(kraft_jsonrpc:decode(JSON), State0),
     {[encode(R) || R <- Replies], State1}.
 
 websocket_info(Info, #{callbacks := #{{info, 2} := true}} = State0) ->
@@ -58,14 +58,7 @@ terminate(Reason, _Req, #{handler := Handler, state := MState0}) ->
 
 %--- Internal ------------------------------------------------------------------
 
-handle_input({batch, Batch}, State0) ->
-    handle_batch(Batch, State0);
-handle_input({single, Message}, State0) ->
-    handle_message(Message, State0).
-
-handle_batch({internal_error, _, _} = Error, State0) ->
-    {[kraft_jsonrpc:format_error(Error)], State0};
-handle_batch(Messages, State0) ->
+handle_messages({batch, Messages}, State0) ->
     Unpacked = [unpack(M) || M <- Messages],
     {Replies, State3} = lists:foldl(
         fun(Message, {Rs, State1}) ->
@@ -75,7 +68,9 @@ handle_batch(Messages, State0) ->
         {[], State0},
         Unpacked
     ),
-    {[lists:flatten(Replies)], State3}.
+    {[lists:flatten(Replies)], State3};
+handle_messages({single, Message}, State0) ->
+    handle_message(Message, State0).
 
 handle_message({internal_error, _, _} = Error, State0) ->
     {[kraft_jsonrpc:format_error(Error)], State0};
@@ -85,8 +80,8 @@ handle_message(Message, #{handler := Handler} = State0) ->
     catch
         error:function_clause:ST ->
             case {Message, ST} of
-                {{call, _, _, _}, [{Handler, message, _, _} | _]} ->
-                    {[error_reply(method_not_found, Message)], State0};
+                {{call, _, _, ID}, [{Handler, message, _, _} | _]} ->
+                    {[error_reply(method_not_found, ID)], State0};
                 _Else ->
                     {[], State0}
             end
@@ -99,8 +94,8 @@ call(Func, Args, #{handler := Handler, state := MState0} = State0) ->
 encode(Messages) ->
     {text, kraft_jsonrpc:encode(Messages)}.
 
-error_reply(method_not_found, Message) ->
-    kraft_jsonrpc:format_error({internal_error, method_not_found, id(Message)}).
+error_reply(method_not_found, ID) ->
+    kraft_jsonrpc:format_error({internal_error, method_not_found, ID}).
 
 unpack({call, Method, Params, ID}) ->
     {call, attempt_atom(Method), Params, ID};
@@ -115,8 +110,3 @@ attempt_atom(Binary) when is_binary(Binary) ->
     catch
         error:badarg -> Binary
     end.
-
-id({call, _Method, _Params, ID}) -> ID;
-id({result, _Method, _Params, ID}) -> ID;
-id({error, _Code, _Message, _Data, ID}) -> ID;
-id(_Message) -> undefined.

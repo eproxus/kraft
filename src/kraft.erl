@@ -119,7 +119,7 @@ static_routes(App, Path) ->
     Static = kraft_file:path(App, static),
     Context = {Static, App, Path},
     StaticRoute = fun(File, Acc) -> static_route(File, Context, Acc) end,
-    filelib:fold_files(Static, <<".*">>, true, StaticRoute, Default).
+    filelib:fold_files(Static, ".*", true, StaticRoute, Default).
 
 static_route(File, {Static, App, Path}, Acc) ->
     Prefix = string:prefix(File, Static),
