@@ -22,6 +22,8 @@ jobs:
       - name: Compile
         run: rebar3 compile
       - name: Check
+        run: rebar3 fmt --check
+      - name: Analyze
         run: rebar3 do xref, dialyzer
       - name: Test
         run: rebar3 do eunit, ct
