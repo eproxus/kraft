@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Erlang/OTP ${{matrix.otp}} / rebar3 ${{matrix.rebar3}}
+    name: Erlang ${{matrix.otp}} / rebar ${{matrix.rebar3}}
     strategy:
       matrix:
         otp: ['23', '24']
