@@ -15,15 +15,28 @@ jobs:
         rebar3: ['3']
     steps:
       - uses: actions/checkout@v2
+
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.otp}}
           rebar3-version: ${{matrix.rebar3}}
+
+      - name: Cache Rebar 3
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-rebar3
+        with:
+          path: ~/.cache/rebar3
+          key: ${{runner.os}}-build-${{env.cache-name}}-${{hashFiles('rebar.lock')}}
+
       - name: Compile
         run: rebar3 compile
+
       - name: Check
         run: rebar3 fmt --check
+
       - name: Analyze
         run: rebar3 do xref, dialyzer
+
       - name: Test
         run: rebar3 do eunit, ct
