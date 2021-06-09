@@ -26,11 +26,16 @@ jobs:
         env:
           cache-name: rebar3
         with:
-          path: ~/.cache/rebar3
+          path: |
+            ~/.cache/rebar3
+            _build
           key: ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}-${{hashFiles('rebar.lock')}}
           restore-keys: |
             ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}
             ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}
+
+      - name: Clean
+        run: rebar3 clean
 
       - name: Compile
         run: rebar3 compile
