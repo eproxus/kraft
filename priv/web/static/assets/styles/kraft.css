@@ -574,11 +574,6 @@ h2 {
   background-color: rgba(209, 213, 219, var(--tw-bg-opacity));
 }
 
-.bg-red-300 {
-  --tw-bg-opacity: 1;
-  background-color: rgba(252, 165, 165, var(--tw-bg-opacity));
-}
-
 .border-red-600 {
   --tw-border-opacity: 1;
   border-color: rgba(220, 38, 38, var(--tw-border-opacity));
@@ -621,14 +616,6 @@ h2 {
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mb-3 {
-  margin-bottom: 0.75rem;
 }
 
 .mb-4 {
@@ -681,6 +668,10 @@ h2 {
 .text-gray-500 {
   --tw-text-opacity: 1;
   color: rgba(107, 114, 128, var(--tw-text-opacity));
+}
+
+.whitespace-pre {
+  white-space: pre;
 }
 
 .w-max {

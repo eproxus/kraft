@@ -23,33 +23,13 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
         Resp = cowboy_req:reply(Status, Headers, Body, Req),
         {ok, Resp, State}
     catch
-        Class:Reason:Stacktrace ->
+        Class:Reason:StackTrace ->
             EHeaders = #{<<"content-type">> => <<"text/html">>},
+            Exception = erl_error:format_exception(Class, Reason, StackTrace),
             EBody = kraft_template:render(kraft, "500.html", #{
-                req => #{
-                    url => Path,
-                    method => Method
-                },
-                exception => #{
-                    class => Class,
-                    reason => io_lib:format("~p", [Reason]),
-                    stacktrace => format_stacktrace(Stacktrace)
-                }
+                req => #{url => Path, method => Method},
+                exception => Exception
             }),
             EResp = cowboy_req:reply(500, EHeaders, EBody, Req),
             {ok, EResp, State}
     end.
-
-%--- Internal ------------------------------------------------------------------
-
-format_stacktrace(Stacktrace) ->
-    lists:map(fun format_stacktrace_entry/1, Stacktrace).
-
-format_stacktrace_entry({M, F, Arity, _Loc}) when is_integer(Arity) ->
-    #{module => M, function => F, arity => Arity};
-format_stacktrace_entry({M, F, Args, _Loc}) ->
-    #{
-        module => M,
-        function => F,
-        args => [io_lib:format("~p", [A]) || A <- Args]
-    }.

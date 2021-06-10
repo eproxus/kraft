@@ -11,17 +11,8 @@
       <div class="font-mono text-gray-500">{{req.url}}</div>
     </div>
 
-    <div class="font-mono rounded bg-red-300 p-3 text-gray-500 mb-3">
-      {{exception.class}}:{{exception.reason}}
-    </div>
-
-    <div class="font-mono rounded shadow-inner bg-gray-100 p-3 text-gray-500 overflow-x-scroll">
-    {{#exception.stacktrace}}
-      <div class="mb-2">
-      {{module}}:{{function}}{{#arity}}/{{arity}}{{/arity}}{{^arity}}({{#args}}{{.}}, {{/args}}){{/arity}}
-      </div>
-    {{/exception.stacktrace}}
-    </div>
+    <pre class="whitespace-pre font-mono rounded shadow-inner bg-gray-100 p-3
+                text-gray-500 overflow-x-scroll">{{exception}}</div>
 
     </div>
   </div>
