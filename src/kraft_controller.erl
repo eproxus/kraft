@@ -17,8 +17,12 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
         Conn = kraft_conn:new(Req, State),
         {Status, Headers, Body} =
             case Handler:init({Req, State}, kraft_conn:params(Conn)) of
-                {C, H, {kraft_template, TH, B}} -> {C, maps:merge(TH, H), B};
-                {C, H, B} when is_binary(B) -> {C, H, B}
+                {C, H, {kraft_template, TH, B}} when is_integer(C), is_map(H) ->
+                    {C, maps:merge(TH, H), B};
+                {C, H, B} when is_binary(B), is_integer(C), is_map(H) ->
+                    {C, H, B};
+                Invalid ->
+                    error({kraft, ?MODULE, {invalid_return, Invalid}})
             end,
         Resp = cowboy_req:reply(Status, Headers, Body, Req),
         {ok, Resp, State}
