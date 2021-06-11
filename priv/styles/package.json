@@ -1,12 +1,12 @@
 {
+  "license": "UNLICENSED",
   "devDependencies": {
     "autoprefixer": "^10.2.5",
     "postcss": "^8.2.13",
-    "tailwindcss": "^2.1.2"
-  },
-  "dependencies": {
+    "postcss-import": "^14.0.1",
+    "tailwindcss": "^2.1.2",
     "@tailwindcss/forms": "^0.3.3",
-    "@tailwindcss/typography": "^0.4.1",
-    "postcss-import": "^14.0.1"
-  }
+    "@tailwindcss/typography": "^0.4.1"
+  },
+  "dependencies": {}
 }
