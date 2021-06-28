@@ -1,0 +1,16 @@
+{application, index, [
+    {description, "Kraft Examples Index"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {index, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        kraft
+    ]},
+    {env,[]},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.

@@ -10,9 +10,8 @@ Start an example shell:
 rebar3 as example shell
 ```
 
-* Blog example is located at http://localhost:8091
-* Web socket example is located at http://localhost:8092
-* Chat example is located at http://localhost:8093
+Navigate to http://localhost:8090 to see a list of examples. All examples can be
+found in the `examples/` folder.
 
 ## Development
 
