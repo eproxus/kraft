@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <title>Kraft REST API</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="/assets/scripts/htmx@1.4.1.min.js"></script>
+  <script src="/assets/scripts/htmx@1.4.1/ext/client-side-templates.js"></script>
+  <script src="/assets/scripts/mustache@4.2.0.min.js"></script>
+</head>
+<body>
+
+<h1>Kraft REST API</h1>
+
+<div hx-ext="client-side-templates">
+  <button hx-get="/api" hx-target="#content" mustache-template="foo">
+    Click Me
+  </button>
+
+  <div id="content"></div>
+
+  <template id="foo">
+    <dl>
+      <dt>User</dt>
+      <dd>{{user}}</dd>
+
+      <dt>ID</dt>
+      <dd>{{id}}</dd>
+
+      <dt>Role</dt>
+      <dd>{{role}}</dd>
+
+      <dt>Last Accessed</dt>
+      <dd>{{access}}</dd>
+    </dl>
+  </template>
+</div>
+
+</body>
+</html>

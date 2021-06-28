@@ -105,6 +105,8 @@ route({Path, kraft_static, #{app := App}}, _App) ->
     static_routes(App, Path);
 route({Path, kraft_static, _State}, App) ->
     static_routes(App, Path);
+route({Path, {cowboy, Handler}, State}, _App) ->
+    [{Path, Handler, State}];
 route({Path, Handler, State}, App) ->
     [
         {Path, kraft_controller, #{

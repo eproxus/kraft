@@ -1,0 +1,17 @@
+{application, rest, [
+    {description, "A REST API example in Kraft"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {rest, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        kraft,
+        jsone
+    ]},
+    {env,[]},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
