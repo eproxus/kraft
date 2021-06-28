@@ -5,7 +5,8 @@
     {mod, {chat, []}},
     {applications, [
         kernel,
-        stdlib
+        stdlib,
+        kraft
     ]},
     {env,[]},
     {modules, []},
