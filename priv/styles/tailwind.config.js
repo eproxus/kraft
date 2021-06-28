@@ -2,7 +2,7 @@ module.exports = {
   purge: {
     enabled: true,
     content: [
-      '../web/templates/**/*.mustache',
+      '../web/templates/**/*.html.mustache',
       '../web/static/**/*.html',
     ]
   },
