@@ -135,7 +135,14 @@ static_route(File, {Static, App, Path}, Acc) ->
     Acc2 =
         case filename:basename(Prefix) of
             "index.html" ->
-                [{Path, cowboy_static, PrivFile} | Acc];
+                [
+                    {
+                        filename:join([Path ++ filename:dirname(Prefix)]),
+                        cowboy_static,
+                        PrivFile
+                    }
+                    | Acc
+                ];
             _ ->
                 Acc
         end,
