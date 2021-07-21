@@ -117,7 +117,13 @@ route({Path, Handler, State}, App) ->
     ].
 
 static_routes(App, Path) ->
-    Default = [{Path ++ "[...]", cowboy_static, {priv_dir, App, "web/static"}}],
+    Default = [
+        {
+            filename:join(Path, "[...]"),
+            cowboy_static,
+            {priv_dir, App, "web/static"}
+        }
+    ],
     Static = kraft_file:path(App, static),
     Context = {Static, App, Path},
     StaticRoute = fun(File, Acc) -> static_route(File, Context, Acc) end,
@@ -125,12 +131,12 @@ static_routes(App, Path) ->
 
 static_route(File, {Static, App, Path}, Acc) ->
     Prefix = string:prefix(File, Static),
-    PrivFile = {priv_file, App, ["web/static", Prefix]},
+    PrivFile = {priv_file, App, filename:join(["web/static/" ++ Prefix])},
     Acc2 =
         case filename:basename(Prefix) of
             "index.html" ->
-                [{filename:dirname(Prefix), cowboy_static, PrivFile} | Acc];
+                [{Path, cowboy_static, PrivFile} | Acc];
             _ ->
                 Acc
         end,
-    [{[Path, Prefix], cowboy_static, PrivFile} | Acc2].
+    [{filename:join([Path ++ Prefix]), cowboy_static, PrivFile} | Acc2].
