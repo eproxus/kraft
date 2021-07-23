@@ -130,15 +130,14 @@ static_routes(App, Path) ->
     filelib:fold_files(Static, ".*", true, StaticRoute, Default).
 
 static_route(File, {Static, App, Path}, Acc) ->
-    Prefix = string:prefix(File, Static),
-    PrivFile = {priv_file, App, filename:join(["web/static/" ++ Prefix])},
+    Prefix = string:trim(string:prefix(File, Static), leading, "/"),
+    PrivFile = {priv_file, App, "web/static/" ++ Prefix},
     Acc2 =
         case filename:basename(Prefix) of
             "index.html" ->
-                IndexPath = filename:join([Path ++ filename:dirname(Prefix)]),
-                Route = {IndexPath, cowboy_static, PrivFile},
+                Route = {filename:join(Path, Prefix), cowboy_static, PrivFile},
                 [Route | Acc];
             _ ->
                 Acc
         end,
-    [{filename:join([Path ++ Prefix]), cowboy_static, PrivFile} | Acc2].
+    [{filename:join(Path, Prefix), cowboy_static, PrivFile} | Acc2].
