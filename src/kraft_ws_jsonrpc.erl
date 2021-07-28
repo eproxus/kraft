@@ -38,12 +38,17 @@ init(Req, State0) ->
     kraft_ws_util:handshake(Req, State1).
 
 websocket_init(#{handler := Handler, state := MState0} = State0) ->
+    timer:send_interval(40000, ping),
     {[], State0#{state => Handler:init(MState0)}}.
 
+websocket_handle(pong, State) ->
+    {[], State};
 websocket_handle({text, JSON}, State0) ->
     {Replies, State1} = handle_messages(kraft_jsonrpc:decode(JSON), State0),
     {[encode(R) || R <- Replies], State1}.
 
+websocket_info(ping, State) ->
+    {[ping], State};
 websocket_info(Info, #{callbacks := #{{info, 2} := true}} = State0) ->
     {Replies, State1} = call(info, [Info], State0),
     {[encode(R) || R <- Replies], State1};
