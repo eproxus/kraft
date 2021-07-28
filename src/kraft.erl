@@ -41,7 +41,6 @@ start(#{port := Port} = Opts, Routes) ->
 
     % Start Cowboy
     Listener = listener_name(App),
-    TransportOpts = [{port, Port}],
     ProtocolOpts = #{
         env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
         stream_handlers => [
@@ -50,7 +49,15 @@ start(#{port := Port} = Opts, Routes) ->
             cowboy_stream_h
         ]
     },
-    {ok, Pid} = cowboy:start_clear(Listener, TransportOpts, ProtocolOpts),
+    {ok, Pid} =
+        case Opts of
+            #{ssl_opts := SslOpts} ->
+                TransportOpts = [{port, Port} | SslOpts],
+                cowboy:start_tls(Listener, TransportOpts, ProtocolOpts);
+            _ ->
+                TransportOpts = [{port, Port}],
+                cowboy:start_clear(Listener, TransportOpts, ProtocolOpts)
+        end,
     link(Pid),
 
     ok.
