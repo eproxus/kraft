@@ -3,9 +3,7 @@
 % API
 -export([new/2]).
 -export([params/1]).
--export([resp/3]).
 -export([merge_resp_headers/2]).
--export([send_resp/1]).
 -export([send_resp/3]).
 -export([meta/2]).
 -export(['_adapter'/1]).
