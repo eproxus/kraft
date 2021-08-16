@@ -63,13 +63,11 @@ stop() ->
         end,
     cowboy:stop_listener(listener_name(App)).
 
-render({_Req, State}, Template, Context) when is_map(State) ->
-    render(State, Template, Context);
-render(#{app := App}, Template, Context) ->
-    render(App, Template, Context);
 render(App, Template, Context) when is_atom(App) ->
     Body = kraft_template:render(App, Template, Context),
-    {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body}.
+    {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body};
+render(Conn, Template, Context) ->
+    render(kraft_conn:meta(Conn, app), Template, Context).
 
 %--- Internal ------------------------------------------------------------------
 

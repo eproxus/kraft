@@ -12,11 +12,11 @@
 
 %--- API -----------------------------------------------------------------------
 
-init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
+init(#{path := Path, method := Method} = Req0, #{handler := Handler} = State) ->
     try
-        Conn = kraft_conn:new(Req, State),
+        Conn0 = kraft_conn:new(Req0, #{app => maps:get(app, State)}),
         {Status, Headers, Body} =
-            case Handler:init({Req, State}, kraft_conn:params(Conn)) of
+            case Handler:init(Conn0, kraft_conn:params(Conn0)) of
                 {C, H, {kraft_template, TH, B}} when is_integer(C), is_map(H) ->
                     {C, maps:merge(TH, H), B};
                 {C, H, B} when is_binary(B), is_integer(C), is_map(H) ->
@@ -24,8 +24,10 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
                 Invalid ->
                     error({kraft, ?MODULE, {invalid_return, Invalid}})
             end,
-        Resp = cowboy_req:reply(Status, Headers, Body, Req),
-        {ok, Resp, State}
+        Conn1 = kraft_conn:merge_resp_headers(Conn0, Headers),
+        Conn2 = kraft_conn:send_resp(Conn1, Status, Body),
+        {cowboy_req, Req1} = kraft_conn:'_adapter'(Conn2),
+        {ok, Req1, State}
     catch
         Class:Reason:StackTrace ->
             EHeaders = #{<<"content-type">> => <<"text/html">>},
@@ -34,6 +36,6 @@ init(#{path := Path, method := Method} = Req, #{handler := Handler} = State) ->
                 req => #{url => Path, method => Method},
                 exception => Exception
             }),
-            EResp = cowboy_req:reply(500, EHeaders, EBody, Req),
+            EResp = cowboy_req:reply(500, EHeaders, EBody, Req0),
             {ok, EResp, State}
     end.
