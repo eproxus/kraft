@@ -29,7 +29,7 @@ message({notification, update, _Params}, State) ->
     {[], State};
 message({notification, foobar, undefined}, State) ->
     {[], State};
-message({notification, notify_hello, undefined}, State) ->
+message({notification, notify_hello, _}, State) ->
     {[], State}.
 
 info({async_result, ID}, State) ->

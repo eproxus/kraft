@@ -1,13 +1,14 @@
 -module(kraft_ws_json).
 
--behaviour(cowboy_websocket).
-
 % Callbacks
--export([init/2]).
--export([websocket_init/1]).
--export([websocket_handle/2]).
--export([websocket_info/2]).
+-export([init/1]).
+-ignore_xref({init, 1}).
+-export([handle/2]).
+-ignore_xref({handle, 2}).
+-export([info/2]).
+-ignore_xref({info, 2}).
 -export([terminate/3]).
+-ignore_xref({terminate, 3}).
 
 %--- Includes ------------------------------------------------------------------
 
@@ -33,46 +34,34 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(Req, State0) ->
-    State1 = kraft_ws_util:callbacks(
-        [{handshake, 3}, {info, 2}, {terminate, 2}],
-        State0
-    ),
-    kraft_ws_util:handshake(Req, State1).
+init(State0) ->
+    call(?FUNCTION_NAME, [], State0).
 
-websocket_init(State) ->
-    call(init, [], State).
-
-websocket_handle({text, Data}, State) ->
+handle({text, Data}, State0) ->
     try
-        call(handle, [{json, decode(Data)}], State)
+        call(?FUNCTION_NAME, [{json, decode(Data)}], State0)
     catch
         error:badarg:ST ->
             case ST of
                 [{jsone_decode, _, _, _} | _] ->
                     ?LOG_WARNING("Bad JSON received: ~p", [cut(Data, 20)]),
-                    {[], State};
+                    {[], State0};
                 _ ->
                     erlang:raise(error, badarg, ST)
             end
     end.
 
-websocket_info(Info, State) ->
-    call(info, [Info], State).
+info(Info, State) ->
+    call(?FUNCTION_NAME, [Info], State).
 
-terminate(_Reason, _Req, #{callbacks := #{{terminate, 2} := false}}) ->
-    ok;
-terminate(Reason, _Req, #{handler := Handler, state := MState0}) ->
-    Handler:terminate(Reason, MState0),
-    ok.
+terminate(Reason, _Req, State0) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [Reason], State0).
 
 %--- Internal ------------------------------------------------------------------
 
-call(info, _Args, #{callbacks := #{{info, 2} := false}} = State0) ->
-    {[], State0};
-call(Func, Args, #{handler := Handler, state := MState0} = State0) ->
-    {Commands, MState1} = erlang:apply(Handler, Func, Args ++ [MState0]),
-    {[encode(C) || C <- Commands], State0#{state => MState1}}.
+call(Func, Args, State0) ->
+    {Commands, State1} = kraft_ws_util:call(Func, Args, State0),
+    {[encode(C) || C <- Commands], State1}.
 
 encode({json, JSON}) -> {text, jsone:encode(JSON)};
 encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};

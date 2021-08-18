@@ -1,13 +1,14 @@
 -module(kraft_ws).
 
--behaviour(cowboy_websocket).
-
 % Callbacks
--export([init/2]).
--export([websocket_init/1]).
--export([websocket_handle/2]).
--export([websocket_info/2]).
+-export([init/1]).
+-ignore_xref({init, 1}).
+-export([handle/2]).
+-ignore_xref({handle, 2}).
+-export([info/2]).
+-ignore_xref({info, 2}).
 -export([terminate/3]).
+-ignore_xref({terminate, 3}).
 
 %--- Types ---------------------------------------------------------------------
 
@@ -29,32 +30,14 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(Req, State0) ->
-    State1 = kraft_ws_util:callbacks(
-        [{handshake, 3}, {info, 2}, {terminate, 2}],
-        State0
-    ),
-    kraft_ws_util:handshake(Req, State1).
+init(State0) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [], State0).
 
-websocket_init(State) ->
-    call(init, [], State).
+handle(Frame, State0) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [Frame], State0).
 
-websocket_handle(Frame, State) ->
-    call(handle, [Frame], State).
+info(Info, State) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [Info], State).
 
-websocket_info(Info, State) ->
-    call(info, [Info], State).
-
-terminate(_Reason, _Req, #{callbacks := #{{terminate, 2} := false}}) ->
-    ok;
-terminate(Reason, _Req, #{handler := Handler, state := MState0}) ->
-    Handler:terminate(Reason, MState0),
-    ok.
-
-%--- API -----------------------------------------------------------------------
-
-call(info, _Args, #{callbacks := #{{info, 2} := false}} = State0) ->
-    {[], State0};
-call(Func, Args, #{handler := Handler, state := MState0} = State0) ->
-    {Commands, MState1} = erlang:apply(Handler, Func, Args ++ [MState0]),
-    {Commands, State0#{state => MState1}}.
+terminate(Reason, _Req, State0) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [Reason], State0).

@@ -11,8 +11,11 @@
 start(_StartType, _StartArgs) ->
     kraft:start(#{port => 8092}, [
         {"/raw/ws", {ws, ws_raw}, #{}},
-        {"/json/ws", {ws, ws_json}, #{}, #{type => json}},
-        {"/jsonrpc/ws", {ws, ws_jsonrpc}, #{}, #{type => json_rpc}},
+        {"/json/ws", {ws, ws_json}, #{}, #{type => json, ping => disabled}},
+        {"/jsonrpc/ws", {ws, ws_jsonrpc}, #{}, #{
+            type => json_rpc,
+            ping => #{interval => 5_000}
+        }},
         {"/", kraft_static, #{}}
     ]),
     ws_sup:start_link().
