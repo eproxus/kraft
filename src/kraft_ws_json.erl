@@ -55,7 +55,7 @@ info(Info, State) ->
     call(?FUNCTION_NAME, [Info], State).
 
 terminate(Reason, _Req, State0) ->
-    kraft_ws_util:call(?FUNCTION_NAME, [Reason], State0).
+    kraft_ws_util:raw_call(?FUNCTION_NAME, [Reason], State0).
 
 %--- Internal ------------------------------------------------------------------
 
