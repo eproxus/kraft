@@ -24,7 +24,8 @@ Kraft uses [erlfmt][erlfmt] to format its code.
 * `rebar3 check` to check if formatting adheres
 
 Kraft includes a Git hook that checks formatting before committing. To start
-using the included Git hook in this repository, run:
+using the included Git hook in this repository, run the following command in
+the root of the repository:
 
 ```
 git config core.hooksPath .githooks
