@@ -32,9 +32,7 @@ send_resp(#{resp_sent := true}) ->
 send_resp(#{resp_status := Status, resp_body := Body} = Conn) ->
     #{adapter := {Module, Req0}} = Conn,
     Req1 = Module:reply(Status, maps:get(headers, Conn, #{}), Body, Req0),
-    Conn#{resp_sent => true, adapter => {Module, Req1}};
-send_resp(_Conn) ->
-    error(response_not_set).
+    Conn#{resp_sent => true, adapter => {Module, Req1}}.
 
 send_resp(Conn, Status, Body) ->
     send_resp(resp(Conn, Status, Body)).
