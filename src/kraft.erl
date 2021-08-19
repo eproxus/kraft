@@ -119,7 +119,7 @@ route({Path, Handler, State}, App) ->
 static_routes(App, Path) ->
     Default = [
         {
-            filename:join(Path, "[...]"),
+            uri_join(Path, "[...]"),
             cowboy_static,
             {priv_dir, App, "web/static"}
         }
@@ -144,4 +144,4 @@ static_route(File, {Static, App, Path}, Acc) ->
 uri_join(Path, SubPath) ->
     Prefix = string:trim(Path, trailing, "/"),
     Suffix = string:trim(SubPath, leading, "/"),
-    uri_string:normalize(string:join([Prefix, Suffix], "/")).
+    string:join([Prefix, Suffix], "/").
