@@ -109,20 +109,31 @@ route({Path, Handler, State}, App) ->
     ].
 
 static_routes(App, Path) ->
-    Default = [{Path ++ "[...]", cowboy_static, {priv_dir, App, "web/static"}}],
+    Default = [
+        {
+            uri_join(Path, "[...]"),
+            cowboy_static,
+            {priv_dir, App, "web/static"}
+        }
+    ],
     Static = kraft_file:path(App, static),
     Context = {Static, App, Path},
     StaticRoute = fun(File, Acc) -> static_route(File, Context, Acc) end,
     filelib:fold_files(Static, ".*", true, StaticRoute, Default).
 
 static_route(File, {Static, App, Path}, Acc) ->
-    Prefix = string:prefix(File, Static),
-    PrivFile = {priv_file, App, ["web/static", Prefix]},
-    Acc2 =
-        case filename:basename(Prefix) of
-            "index.html" ->
-                [{filename:dirname(Prefix), cowboy_static, PrivFile} | Acc];
-            _ ->
-                Acc
-        end,
-    [{[Path, Prefix], cowboy_static, PrivFile} | Acc2].
+    Prefix = string:trim(string:prefix(File, Static), leading, "/"),
+    case filename:basename(Prefix) of
+        "index.html" ->
+            PrivFile = {priv_file, App, filename:join("web/static/", Prefix)},
+            SubDir = filename:dirname(Prefix),
+            IndexPath = uri_join(Path, SubDir),
+            [{IndexPath, cowboy_static, PrivFile} | Acc];
+        _ ->
+            Acc
+    end.
+
+uri_join(Path, SubPath) ->
+    Prefix = string:trim(Path, trailing, "/"),
+    Suffix = string:trim(SubPath, leading, "/"),
+    string:join([Prefix, Suffix], "/").
