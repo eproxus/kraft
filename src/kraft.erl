@@ -124,7 +124,11 @@ static_route(File, {Static, App, Path}, Acc) ->
     case filename:basename(Prefix) of
         "index.html" ->
             PrivFile = {priv_file, App, filename:join("web/static/", Prefix)},
-            SubDir = filename:dirname(Prefix),
+            SubDir =
+                case filename:dirname(Prefix) of
+                    "." -> "";
+                    Dir -> Dir
+                end,
             IndexPath = uri_join(Path, SubDir),
             [{IndexPath, cowboy_static, PrivFile} | Acc];
         _ ->
