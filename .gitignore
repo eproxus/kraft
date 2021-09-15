@@ -22,3 +22,6 @@ rebar3.crashdump
 
 examples/blog/priv/web/static
 examples/blog/rebar.lock
+
+# macOS
+.DS_Store
