@@ -16,4 +16,4 @@ start(_StartType, _StartArgs) ->
     {ok, self()}.
 
 stop(_State) ->
-    ok.
+    kraft:stop().

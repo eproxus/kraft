@@ -22,7 +22,7 @@ start(_StartType, _StartArgs) ->
     blog_sup:start_link().
 
 stop(_State) ->
-    ok.
+    kraft:stop().
 
 global_vars(Vars) ->
     Meta = maps:from_list(ets:tab2list(blog_meta)),

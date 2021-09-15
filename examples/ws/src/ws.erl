@@ -21,4 +21,4 @@ start(_StartType, _StartArgs) ->
     ws_sup:start_link().
 
 stop(_State) ->
-    ok.
+    kraft:stop().
