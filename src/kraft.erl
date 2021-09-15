@@ -4,6 +4,7 @@
 -export([start/1]).
 -export([start/2]).
 -export([stop/0]).
+-export([stop/1]).
 -export([render/3]).
 
 % Public API
@@ -11,6 +12,7 @@
 -ignore_xref({render, 3}).
 -ignore_xref({start, 2}).
 -ignore_xref({stop, 0}).
+-ignore_xref({stop, 1}).
 
 %--- Types ---------------------------------------------------------------------
 
@@ -55,13 +57,9 @@ start(#{port := Port} = Opts, Routes) ->
 
     ok.
 
-stop() ->
-    App =
-        case application:get_application() of
-            undefined -> error(cannot_determine_app);
-            {ok, A} -> A
-        end,
-    cowboy:stop_listener(listener_name(App)).
+stop() -> stop(detect_app(#{})).
+
+stop(App) -> cowboy:stop_listener(listener_name(App)).
 
 render(App, Template, Context) when is_atom(App) ->
     Body = kraft_template:render(App, Template, Context),
