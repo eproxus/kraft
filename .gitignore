@@ -1,3 +1,4 @@
+# Erlang
 .rebar3
 _*
 .eunit
@@ -18,8 +19,8 @@ _build
 rebar3.crashdump
 *~
 
+# Kraft
 **/priv/styles/node_modules
-
 examples/blog/priv/web/static
 examples/blog/rebar.lock
 
