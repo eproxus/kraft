@@ -83,8 +83,8 @@ handle_message(Message, #{handler := Handler} = State0) ->
             end
     end.
 
-encode(Messages) ->
-    {text, kraft_jsonrpc:encode(Messages)}.
+encode(close) -> close;
+encode(Messages) -> {text, kraft_jsonrpc:encode(Messages)}.
 
 error_reply(method_not_found, ID) ->
     kraft_jsonrpc:format_error({internal_error, method_not_found, ID}).

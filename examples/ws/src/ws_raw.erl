@@ -9,9 +9,9 @@
 %--- API -----------------------------------------------------------------------
 
 init(State) ->
-    {[{text, "Hello from Kraft!"}], State}.
+    {[{text, <<"Hello from Kraft!">>}], State}.
 
+handle({text, <<"Good bye!">>}, State) ->
+    {[{text, <<"Bye!">>}, close], State};
 handle({text, Text}, State) ->
-    {[{text, ["You said: ", Text]}], State};
-handle(_Frame, State) ->
-    {[], State}.
+    {[{text, [<<"You said: ">>, Text]}], State}.

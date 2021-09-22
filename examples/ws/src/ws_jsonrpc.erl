@@ -24,6 +24,9 @@ message({call, get_data, undefined, ID}, State) ->
 message({call, async, undefined, ID}, State) ->
     self() ! {async_result, ID},
     {[], State};
+message({call, goodbye, #{time := Time}, ID}, State) when is_integer(Time) ->
+    erlang:send_after(Time, self(), {goodbye, ID}),
+    {[], State};
 % Notifications
 message({notification, update, _Params}, State) ->
     {[], State};
@@ -33,4 +36,6 @@ message({notification, notify_hello, _}, State) ->
     {[], State}.
 
 info({async_result, ID}, State) ->
-    {[{result, <<"async result">>, ID}], State}.
+    {[{result, <<"async result">>, ID}], State};
+info({goodbye, ID}, State) ->
+    {[{result, bye, ID}, close], State}.

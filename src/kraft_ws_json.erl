@@ -66,7 +66,8 @@ call(Func, Args, State0) ->
 encode({json, JSON}) -> {text, jsone:encode(JSON)};
 encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};
 encode({text, Text}) -> {text, Text};
-encode({binary, Binary}) -> {binary, Binary}.
+encode({binary, Binary}) -> {binary, Binary};
+encode(close) -> close.
 
 decode(Binary) ->
     jsone:decode(Binary, [{keys, attempt_atom}]).

@@ -11,5 +11,7 @@
 init(State) ->
     {[{json, #{msg => <<"hello from kraft!">>}}], State}.
 
+handle({json, #{msg := <<"Good bye!">>}}, State) ->
+    {[{json, #{reply => <<"Bye!">>}}, close], State};
 handle({json, JSON}, State) ->
     {[{json, #{echo => JSON}}], State}.

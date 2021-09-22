@@ -11,20 +11,25 @@
 <p>To see web socket communication, open the JavaScript console.</p>
 
 <script type="text/javascript">
-// Create WebSocket connection.
+
 const socket = new WebSocket('ws://localhost:8092/raw/ws');
 
-// Connection opened
-socket.addEventListener('open', function (event) {
-    data = 'Hello Server!';
-    console.log('Message to server ', data)
-    socket.send(data);
-});
+function send(socket, message) {
+    console.log('Message to server', message);
+    socket.send(message);
+}
 
-// Listen for messages
 socket.addEventListener('message', function (event) {
     console.log('Message from server ', event.data);
 });
+socket.addEventListener('close', function (event) {
+    console.log('Connection closed');
+});
+socket.addEventListener('open', function (event) {
+    send(socket, 'Hello Server!');
+    send(socket, 'Good bye!');
+});
+
 </script>
 
 </body>
