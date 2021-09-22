@@ -57,6 +57,8 @@ call(Func, Args, State0) ->
     {Commands, MState1} = raw_call(Func, Args, State0),
     {Commands, State0#{state => MState1}}.
 
+raw_call(terminate, _Args, #{callbacks := #{{terminate, 2} := false}}) ->
+    ok;
 raw_call(Func, Args, #{handler := Handler, state := MState0}) ->
     erlang:apply(Handler, Func, Args ++ [MState0]).
 
