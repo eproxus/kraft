@@ -17,6 +17,8 @@ message({call, subtract, [A, B], ID}, State) ->
     {[{result, A - B, ID}], State};
 message({call, subtract, #{minuend := A, subtrahend := B}, ID}, State) ->
     {[{result, A - B, ID}], State};
+message({call, foobar, _Params, ID}, State) ->
+    {[{error, method_not_found, ID}], State};
 message({call, sum, Params, ID}, State) when is_list(Params) ->
     {[{result, lists:sum(Params), ID}], State};
 message({call, get_data, undefined, ID}, State) ->

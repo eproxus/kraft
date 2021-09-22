@@ -133,6 +133,8 @@ pack({notification, Method, Params}) ->
     #{?V, method => Method, params => Params};
 pack({result, Result, ID}) ->
     #{?V, result => Result, id => ID};
+pack({error, Type, ID}) ->
+    pack(format_error({internal_error, Type, ID}));
 pack({error, Code, Message, undefined, undefined}) ->
     #{?V, error => #{code => Code, message => Message}, id => null};
 pack({error, Code, Message, undefined, ID}) ->
