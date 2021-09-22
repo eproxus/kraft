@@ -60,11 +60,6 @@ encode(Messages) when is_list(Messages) ->
 encode(Message) ->
     encode_json(pack(Message)).
 
-% encode({batch, Messages}) ->
-%     encode_json([pack(M) || M <- Messages]);
-% encode({single, Message}) ->
-%     encode_json(pack(Message)).
-
 format_error({internal_error, parse_error, ID}) ->
     {error, -32700, <<"Parse error">>, undefined, ID};
 format_error({internal_error, invalid_request, ID}) ->
