@@ -23,7 +23,7 @@ socket.addEventListener('message', function (event) {
     console.log('Message from server ', JSON.parse(event.data));
 });
 socket.addEventListener('close', function (event) {
-    console.log('Connection closed');
+    console.log('Connection closed', event);
 });
 socket.addEventListener('open', function (event) {
     send(socket, `

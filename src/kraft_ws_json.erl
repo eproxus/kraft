@@ -63,11 +63,13 @@ call(Func, Args, State0) ->
     {Commands, State1} = kraft_ws_util:call(Func, Args, State0),
     {[encode(C) || C <- Commands], State1}.
 
+encode(close = Close) -> Close;
+encode({close, _IOData} = Close) -> Close;
+encode({close, _Code, _IOData} = Close) -> Close;
 encode({json, JSON}) -> {text, jsone:encode(JSON)};
 encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};
 encode({text, Text}) -> {text, Text};
-encode({binary, Binary}) -> {binary, Binary};
-encode(close) -> close.
+encode({binary, Binary}) -> {binary, Binary}.
 
 decode(Binary) ->
     jsone:decode(Binary, [{keys, attempt_atom}]).

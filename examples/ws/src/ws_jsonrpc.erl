@@ -40,4 +40,4 @@ message({notification, notify_hello, _}, State) ->
 info({async_result, ID}, State) ->
     {[{result, <<"async result">>, ID}], State};
 info({goodbye, ID}, State) ->
-    {[{result, bye, ID}, close], State}.
+    {[{result, bye, ID}, {close, 4000, #{reason => <<"Bye!">>}}], State}.

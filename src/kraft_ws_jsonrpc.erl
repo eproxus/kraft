@@ -83,7 +83,9 @@ handle_message(Message, #{handler := Handler} = State0) ->
             end
     end.
 
-encode(close) -> close;
+encode(close = Close) -> Close;
+encode({close, _IOData} = Close) -> Close;
+encode({close, _Code, _IOData} = Close) -> Close;
 encode(Messages) -> {text, kraft_jsonrpc:encode(Messages)}.
 
 error_reply(method_not_found, ID) ->
