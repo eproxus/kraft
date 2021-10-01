@@ -31,7 +31,7 @@ send_resp(#{resp_sent := true}) ->
     error(response_already_sent);
 send_resp(#{resp_status := Status, resp_body := Body} = Conn) ->
     #{adapter := {Module, Req0}} = Conn,
-    Req1 = Module:reply(Status, maps:get(headers, Conn, #{}), Body, Req0),
+    Req1 = Module:reply(Status, maps:get(resp_headers, Conn, #{}), Body, Req0),
     Conn#{resp_sent => true, adapter => {Module, Req1}}.
 
 send_resp(Conn, Status, Body) ->
