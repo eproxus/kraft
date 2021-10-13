@@ -13,7 +13,8 @@
 start(_StartType, _StartArgs) ->
     kraft:start(#{port => 8093}, [
         {"/chatroom", {ws, chat_room}, #{}, #{type => json}},
-        {"/", ?MODULE, #{}}
+        {"/", ?MODULE, #{}},
+        {"/", kraft_static, #{}}
     ]),
     chat_sup:start_link().
 
