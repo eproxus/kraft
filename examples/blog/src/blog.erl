@@ -14,7 +14,7 @@
 start(_StartType, _StartArgs) ->
     create_posts(),
     kraft:start(#{port => 8091}, [
-        {"/", blog_index, #{}},
+        {"/", blog_index, #{message => <<"Welcome!">>}},
         {"/posts/:id", blog_post, #{}},
         {"/pages/:id", blog_page, #{}},
         {"/", kraft_static, #{}}

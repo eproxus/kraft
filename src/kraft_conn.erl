@@ -5,7 +5,9 @@
 -export([params/1]).
 -export([merge_resp_headers/2]).
 -export([send_resp/3]).
+-export(['_meta'/1]).
 -export(['_meta'/2]).
+-export(['_set_meta'/3]).
 -export(['_adapter'/1]).
 
 %--- Types ---------------------------------------------------------------------
@@ -37,9 +39,16 @@ send_resp(#{resp_status := Status, resp_body := Body} = Conn) ->
 send_resp(Conn, Status, Body) ->
     send_resp(resp(Conn, Status, Body)).
 
+'_meta'(#{meta := Meta}) -> Meta.
+
 '_meta'(Conn, Key) when not is_list(Key) ->
     '_meta'(Conn, [Key]);
 '_meta'(Conn, Path) ->
     mapz:deep_get([meta | Path], Conn).
+
+'_set_meta'(Conn, Key, Value) when not is_list(Key) ->
+    '_set_meta'(Conn, [Key], Value);
+'_set_meta'(Conn, Path, Value) ->
+    mapz:deep_put([meta | Path], Value, Conn).
 
 '_adapter'(#{adapter := Adapter}) -> Adapter.
