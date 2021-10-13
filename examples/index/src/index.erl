@@ -9,7 +9,9 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    kraft:start(#{port => 8090}, [{"/", kraft_static, #{}}]),
+    kraft:start(#{port => 8090}, [
+        {"/", kraft_static, #{file => "index.html"}}
+    ]),
     {ok, self()}.
 
 stop(_State) ->

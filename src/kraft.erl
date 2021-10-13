@@ -98,10 +98,11 @@ route({Path, {ws, Handler}, MState}, App) ->
 route({Path, {ws, Handler}, MState, Opts}, App) ->
     {Module, State} = kraft_ws_util:setup(Opts, App, Handler, MState),
     [{Path, Module, State}];
-route({Path, kraft_static, #{app := App}}, _App) ->
-    static_routes(App, Path);
-route({Path, kraft_static, _State}, App) ->
-    static_routes(App, Path);
+route({Path, kraft_static, #{file := File} = State}, App) ->
+    StaticFile = filename:join("web/static/", File),
+    [{Path, cowboy_static, {priv_file, maps:get(app, State, App), StaticFile}}];
+route({Path, kraft_static, State}, App) ->
+    static_routes(maps:get(app, State, App), Path);
 route({Path, {cowboy, Handler}, State}, _App) ->
     [{Path, Handler, State}];
 route({Path, Handler, State}, App) ->
