@@ -72,7 +72,7 @@ render(App, Template, Context) when is_atom(App) ->
     Body = kraft_template:render(App, Template, Context),
     {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body};
 render(Conn, Template, Context) ->
-    render(kraft_conn:meta(Conn, app), Template, Context).
+    render(kraft_conn:'_meta'(Conn, app), Template, Context).
 
 %--- Internal ------------------------------------------------------------------
 
