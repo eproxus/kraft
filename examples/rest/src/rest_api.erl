@@ -14,7 +14,7 @@ content_types_provided(Req, State) ->
     {[{{<<"application">>, <<"json">>, '*'}, to_json}], Req, State}.
 
 to_json(Req, State) ->
-    Body = jsone:encode(#{
+    Body = jsx:encode(#{
         user => <<"User1">>,
         id => 1,
         role => admin,

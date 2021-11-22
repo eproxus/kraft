@@ -18,7 +18,7 @@
 
 -type commands() :: cowboy_websocket:commands().
 -type state() :: any().
--type frame() :: {json, jsone:json_term()}.
+-type frame() :: {json, kraft_json:json()}.
 
 -optional_callbacks([handshake/3]).
 -callback handshake(kraft:conn(), kraft:params(), state()) ->
@@ -39,16 +39,11 @@ init(State0) ->
 
 handle({text, Data}, State0) ->
     try
-        call(?FUNCTION_NAME, [{json, decode(Data)}], State0)
+        call(?FUNCTION_NAME, [{json, kraft_json:decode(Data)}], State0)
     catch
-        error:badarg:ST ->
-            case ST of
-                [{jsone_decode, _, _, _} | _] ->
-                    ?LOG_WARNING("Bad JSON received: ~p", [cut(Data, 20)]),
-                    {[], State0};
-                _ ->
-                    erlang:raise(error, badarg, ST)
-            end
+        error:badarg ->
+            ?LOG_WARNING("Bad JSON received: ~p", [cut(Data, 200)]),
+            {[], State0}
     end.
 
 info(Info, State) ->
@@ -66,13 +61,10 @@ call(Func, Args, State0) ->
 encode(close = Close) -> Close;
 encode({close, _IOData} = Close) -> Close;
 encode({close, _Code, _IOData} = Close) -> Close;
-encode({json, JSON}) -> {text, jsone:encode(JSON)};
+encode({json, JSON}) -> {text, kraft_json:encode(JSON)};
 encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};
 encode({text, Text}) -> {text, Text};
 encode({binary, Binary}) -> {binary, Binary}.
-
-decode(Binary) ->
-    jsone:decode(Binary, [{keys, attempt_atom}]).
 
 cut(Data, Len) ->
     case Data of

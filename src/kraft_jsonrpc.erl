@@ -42,23 +42,24 @@
 %--- API ----------------------------------------------------------------------
 
 decode(Binary) ->
-    case decode_json(Binary) of
-        {ok, []} ->
+    try kraft_json:decode(Binary) of
+        [] ->
             {single, {internal_error, invalid_request, null}};
-        {ok, Messages} when is_list(Messages) ->
+        Messages when is_list(Messages) ->
             {batch, [unpack(M) || M <- Messages]};
-        {ok, Message} when is_map(Message) ->
+        Message when is_map(Message) ->
             {single, unpack(Message)};
-        {ok, _Other} ->
-            {single, {internal_error, invalid_request, id(_Other)}};
-        {error, parse_error} ->
+        _Other ->
+            {single, {internal_error, invalid_request, id(_Other)}}
+    catch
+        error:badarg ->
             {single, {internal_error, parse_error, null}}
     end.
 
 encode(Messages) when is_list(Messages) ->
-    encode_json([pack(M) || M <- Messages]);
+    kraft_json:encode([pack(M) || M <- Messages]);
 encode(Message) ->
-    encode_json(pack(Message)).
+    kraft_json:encode(pack(Message)).
 
 format_error({internal_error, parse_error, ID}) ->
     {error, -32700, <<"Parse error">>, undefined, ID};
@@ -72,19 +73,6 @@ format_error({internal_error, internal_error, ID}) ->
     {error, -32603, <<"Internal error">>, undefined, ID}.
 
 %--- Internal -----------------------------------------------------------------
-
-decode_json(Binary) ->
-    try
-        {ok, jsone:decode(Binary, [{keys, attempt_atom}])}
-    catch
-        error:badarg:ST ->
-            case ST of
-                [Call | _] when element(1, Call) == jsone_decode ->
-                    {error, parse_error};
-                _ ->
-                    erlang:raise(error, badarg, ST)
-            end
-    end.
 
 unpack(#{method := Method, params := Params, id := ID} = M) when
     ?is_valid(M), ?is_method(Method), ?is_params(Params)
@@ -146,8 +134,6 @@ pack({error, Code, Message, Data, undefined}) ->
     };
 pack({error, Code, Message, Data, ID}) ->
     #{?V, error => #{code => Code, message => Message, data => Data}, id => ID}.
-
-encode_json(JSON) -> jsone:encode(JSON).
 
 id(Object) when is_map(Object) -> maps:get(id, Object, undefined);
 id(_Object) -> undefined.

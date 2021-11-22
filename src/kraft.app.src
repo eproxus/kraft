@@ -8,7 +8,7 @@
         stdlib,
         cowboy,
         bbmustache,
-        jsone,
+        jsx,
         mapz
     ]},
     {env,[]},
