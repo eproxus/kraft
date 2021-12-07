@@ -1,8 +1,8 @@
 -module(kraft_ws_json).
 
 % Callbacks
--export([init/1]).
--ignore_xref({init, 1}).
+-export([init/2]).
+-ignore_xref({init, 2}).
 -export([handle/2]).
 -ignore_xref({handle, 2}).
 -export([info/2]).
@@ -25,7 +25,7 @@
     {reply, kraft:status(), kraft:headers(), kraft:body()}
     | {ok, state()}.
 
--callback init(state()) -> {commands(), state()}.
+-callback init(kraft:conn(), state()) -> {commands(), state()}.
 
 -callback handle(frame(), state()) -> {commands(), state()}.
 
@@ -34,8 +34,7 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(State0) ->
-    call(?FUNCTION_NAME, [], State0).
+init(Conn, State0) -> call(?FUNCTION_NAME, [Conn], State0).
 
 handle({text, Data}, State0) ->
     try
@@ -46,8 +45,7 @@ handle({text, Data}, State0) ->
             {[], State0}
     end.
 
-info(Info, State) ->
-    call(?FUNCTION_NAME, [Info], State).
+info(Info, State) -> call(?FUNCTION_NAME, [Info], State).
 
 terminate(Reason, _Req, State0) ->
     kraft_ws_util:raw_call(?FUNCTION_NAME, [Reason], State0).

@@ -77,7 +77,10 @@ render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
         exception => iolist_to_binary(Exception),
         color => red
     },
-    init_verify(Conn, {Code, #{}, kraft:render(kraft, Template, Context)}, #{}).
+    Body = kraft:render(
+        kraft_conn:'_set_meta'(Conn, app, kraft), Template, Context
+    ),
+    init_verify(Conn, {Code, #{}, Body}, #{}).
 
 render_error(error, {missing_template, _App, Path}) ->
     {"error_missing_template.html", [], #{template => Path}};

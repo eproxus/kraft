@@ -3,24 +3,25 @@
 -behaviour(kraft_ws_json).
 
 % API
--export([init/1]).
+-export([init/2]).
 -export([handle/2]).
 -export([info/2]).
 -export([terminate/2]).
 
 %--- API -----------------------------------------------------------------------
 
-init(State) ->
+init(Conn, State) ->
     join(),
-    {[{text, kraft:render(chat, "intro.html", #{user => user()})}], State}.
+    Intro = kraft:render(Conn, "intro.html", #{user => user()}),
+    {[{text, Intro}], State#{conn => Conn}}.
 
 handle({json, #{chat_message := Message}}, State) ->
     send_message(Message),
     {[], State}.
 
-info({message, From, Message}, State) ->
+info({message, From, Message}, #{conn := Conn} = State) ->
     Vars = #{message => Message, user => From},
-    {[{text, kraft:render(chat, "message.html", Vars)}], State}.
+    {[{text, kraft:render(Conn, "message.html", Vars)}], State}.
 
 terminate(_Reason, _State) ->
     send_message("[left]").

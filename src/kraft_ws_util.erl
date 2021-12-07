@@ -69,11 +69,12 @@ init(Req, State0) ->
         [{handshake, 3}, {info, 2}, {terminate, 2}],
         State0
     ),
-    kraft_ws_util:handshake(Req, State1).
+    Conn = kraft_conn:new(Req, State0),
+    kraft_ws_util:handshake(Req, State1#{conn => Conn}).
 
-websocket_init(State0) ->
+websocket_init(#{conn := Conn} = State0) ->
     State1 = trigger_ping(State0),
-    module(init, [], State1).
+    module(init, [Conn], State1).
 
 websocket_handle(pong, #{ping := #{}} = State0) ->
     {[], State0};

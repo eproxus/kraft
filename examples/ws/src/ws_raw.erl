@@ -3,12 +3,12 @@
 -behaviour(kraft_ws).
 
 % API
--export([init/1]).
+-export([init/2]).
 -export([handle/2]).
 
 %--- API -----------------------------------------------------------------------
 
-init(State) ->
+init(_Conn, State) ->
     {[{text, <<"Hello from Kraft!">>}], State}.
 
 handle({text, <<"Good bye!">>}, State) ->

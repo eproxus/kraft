@@ -3,12 +3,12 @@
 -behaviour(kraft_ws_json).
 
 % API
--export([init/1]).
+-export([init/2]).
 -export([handle/2]).
 
 %--- API -----------------------------------------------------------------------
 
-init(State) ->
+init(_Conn, State) ->
     {[{json, #{msg => <<"hello from kraft!">>}}], State}.
 
 handle({json, #{msg := <<"Good bye!">>}}, State) ->

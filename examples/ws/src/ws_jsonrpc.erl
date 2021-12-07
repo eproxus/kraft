@@ -3,13 +3,13 @@
 -behaviour(kraft_ws_jsonrpc).
 
 % API
--export([init/1]).
+-export([init/2]).
 -export([message/2]).
 -export([info/2]).
 
 %--- API -----------------------------------------------------------------------
 
-init(State) ->
+init(_Conn, State) ->
     State.
 
 % Calls

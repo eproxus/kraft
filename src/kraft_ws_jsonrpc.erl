@@ -1,8 +1,8 @@
 -module(kraft_ws_jsonrpc).
 
 % Callbacks
--export([init/1]).
--ignore_xref({init, 1}).
+-export([init/2]).
+-ignore_xref({init, 2}).
 -export([handle/2]).
 -ignore_xref({handle, 2}).
 -export([info/2]).
@@ -23,20 +23,18 @@
     {reply, kraft:status(), kraft:headers(), kraft:body()}
     | {ok, state()}.
 
--callback init(state()) ->
-    state().
+-callback init(kraft:conn(), state()) -> state().
 
 -callback message(kraft_jsonrpc:message(), state()) ->
     {[kraft_jsonrpc:message()], state()}.
 
 -optional_callbacks([info/2]).
--callback info(any(), state()) ->
-    {[kraft_jsonrpc:message()], state()}.
+-callback info(any(), state()) -> {[kraft_jsonrpc:message()], state()}.
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(State0) ->
-    MState = kraft_ws_util:raw_call(?FUNCTION_NAME, [], State0),
+init(Conn, State0) ->
+    MState = kraft_ws_util:raw_call(?FUNCTION_NAME, [Conn], State0),
     % FIXME: Ugly to update inner state here?
     {[], State0#{state => MState}}.
 

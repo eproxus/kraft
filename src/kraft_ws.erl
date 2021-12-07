@@ -1,8 +1,8 @@
 -module(kraft_ws).
 
 % Callbacks
--export([init/1]).
--ignore_xref({init, 1}).
+-export([init/2]).
+-ignore_xref({init, 2}).
 -export([handle/2]).
 -ignore_xref({handle, 2}).
 -export([info/2]).
@@ -21,7 +21,7 @@
     {reply, kraft:status(), kraft:headers(), kraft:body()}
     | {ok, state()}.
 
--callback init(state()) -> {commands(), state()}.
+-callback init(kraft:conn(), state()) -> {commands(), state()}.
 
 -callback handle(frame(), state()) -> {commands(), state()}.
 
@@ -30,8 +30,8 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(State0) ->
-    kraft_ws_util:call(?FUNCTION_NAME, [], State0).
+init(Conn, State0) ->
+    kraft_ws_util:call(?FUNCTION_NAME, [Conn], State0).
 
 handle(Frame, State0) ->
     kraft_ws_util:call(?FUNCTION_NAME, [Frame], State0).
