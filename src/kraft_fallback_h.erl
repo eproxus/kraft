@@ -34,23 +34,24 @@ early_error(StreamID, Reason, PartialReq, Resp, Opts) ->
 insert_fallbacks(Commands0, State) ->
     lists:map(fun(C) -> insert_fallback(C, State) end, Commands0).
 
-insert_fallback({response, 403, Headers, <<>>}, State) ->
-    Body = kraft_template:render(kraft, "403.html", #{
-        req => #{
-            method => maps:get(method, State),
-            path => maps:get(path, State)
-        }
-    }),
-    ContentLength = integer_to_binary(iolist_size(Body)),
-    {response, 403, Headers#{<<"content-length">> => ContentLength}, Body};
-insert_fallback({response, 404, Headers, <<>>}, State) ->
-    Body = kraft_template:render(kraft, "404.html", #{
-        req => #{
-            method => maps:get(method, State),
-            path => maps:get(path, State)
-        }
-    }),
-    ContentLength = integer_to_binary(iolist_size(Body)),
-    {response, 404, Headers#{<<"content-length">> => ContentLength}, Body};
+insert_fallback({response, 403 = Code, Headers, <<>>}, State) ->
+    render(Code, State, Headers);
+insert_fallback({response, 404 = Code, Headers, <<>>}, State) ->
+    render(Code, State, Headers);
 insert_fallback(Command, _State) ->
     Command.
+
+render(Code, State, Headers) ->
+    Body = kraft_template:render(kraft, "error.html", context(Code, State)),
+    ContentLength = integer_to_binary(iolist_size(Body)),
+    {response, Code, Headers#{<<"content-length">> => ContentLength}, Body}.
+
+context(Code, State) ->
+    #{
+        title => kraft_http:status(Code),
+        warning => true,
+        properties => [
+            #{name => method, value => maps:get(method, State)},
+            #{name => path, value => maps:get(path, State)}
+        ]
+    }.

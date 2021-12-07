@@ -1156,6 +1156,11 @@ h2 {
   margin-bottom: 0;
 }
 
+.bg-black {
+  --tw-bg-opacity: 1;
+  background-color: rgba(0, 0, 0, var(--tw-bg-opacity));
+}
+
 .bg-white {
   --tw-bg-opacity: 1;
   background-color: rgba(255, 255, 255, var(--tw-bg-opacity));
@@ -1171,9 +1176,23 @@ h2 {
   background-color: rgba(209, 213, 219, var(--tw-bg-opacity));
 }
 
-.border-red-600 {
+.bg-red-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(254, 202, 202, var(--tw-bg-opacity));
+}
+
+.bg-yellow-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(253, 230, 138, var(--tw-bg-opacity));
+}
+
+.bg-opacity-10 {
+  --tw-bg-opacity: 0.1;
+}
+
+.border-red-400 {
   --tw-border-opacity: 1;
-  border-color: rgba(220, 38, 38, var(--tw-border-opacity));
+  border-color: rgba(248, 113, 113, var(--tw-border-opacity));
 }
 
 .border-yellow-400 {
@@ -1197,12 +1216,22 @@ h2 {
   display: table;
 }
 
-.grid {
-  display: grid;
-}
-
 .font-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
 }
 
 .mx-auto {
@@ -1238,6 +1267,20 @@ h2 {
   padding: 1.5rem;
 }
 
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.pr-2 {
+  padding-right: 0.5rem;
+}
+
 * {
   --tw-shadow: 0 0 #0000;
 }
@@ -1266,22 +1309,16 @@ h2 {
   color: rgba(107, 114, 128, var(--tw-text-opacity));
 }
 
+.capitalize {
+  text-transform: capitalize;
+}
+
 .whitespace-pre {
   white-space: pre;
 }
 
-.w-max {
-  width: -webkit-max-content;
-  width: -moz-max-content;
-  width: max-content;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.grid-flow-row {
-  grid-auto-flow: row;
+.break-words {
+  overflow-wrap: break-word;
 }
 
 @-webkit-keyframes spin {
@@ -1350,17 +1387,29 @@ h2 {
   }
 }
 
+.bg-blend-overlay {
+  background-blend-mode: overlay;
+}
+
 @media (min-width: 640px) {
-  .sm\:justify-self-end {
-    justify-self: end;
+  .sm\:table {
+    display: table;
+  }
+
+  .sm\:table-cell {
+    display: table-cell;
+  }
+
+  .sm\:table-row-group {
+    display: table-row-group;
+  }
+
+  .sm\:table-row {
+    display: table-row;
   }
 
   .sm\:p-6 {
     padding: 1.5rem;
-  }
-
-  .sm\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

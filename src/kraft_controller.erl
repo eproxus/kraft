@@ -13,22 +13,16 @@
 
 %--- API -----------------------------------------------------------------------
 
-init(#{path := Path, method := Method} = Req0, State) ->
+init(Req0, State) ->
+    Conn0 = kraft_conn:new(Req0, State),
     try
-        Conn0 = kraft_conn:new(Req0, State),
         Conn1 = init_exec(Conn0),
         {cowboy_req, Req1} = kraft_conn:'_adapter'(Conn1),
         {ok, Req1, kraft_conn:'_meta'(Conn1)}
     catch
-        Class:Reason:StackTrace ->
-            EHeaders = #{<<"content-type">> => <<"text/html">>},
-            Exception = erl_error:format_exception(Class, Reason, StackTrace),
-            EBody = kraft_template:render(kraft, "500.html", #{
-                req => #{url => Path, method => Method},
-                exception => Exception
-            }),
-            EResp = cowboy_req:reply(500, EHeaders, EBody, Req0),
-            {ok, EResp, State}
+        Class:Reason:Stacktrace ->
+            {ok, render_error(500, Conn0, Req0, Class, Reason, Stacktrace),
+                State}
     end.
 
 %--- Internal ------------------------------------------------------------------
@@ -60,3 +54,32 @@ collect_headers(Headers, Body) when is_binary(Body) ->
     {Headers, Body};
 collect_headers(_Headers, _Body) ->
     throw(invalid_return).
+
+render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
+    Exception = erl_error:format_exception(Class, Reason, Stacktrace),
+    {Template, Properties, ExtraContext} = render_error(Class, Reason),
+    ReasonString = io_lib:format("~p", [Reason]),
+    Context = ExtraContext#{
+        title => kraft_http:status(Code),
+        error => true,
+        properties => [
+            #{name => method, value => maps:get(method, Req)},
+            #{name => path, value => maps:get(path, Req)},
+            #{
+                name => app,
+                value => kraft_conn:'_meta'(Conn, app)
+            },
+            #{name => class, value => Class},
+            #{name => reason, value => ReasonString}
+        ] ++ Properties,
+        class => Class,
+        reason => ReasonString,
+        exception => iolist_to_binary(Exception),
+        color => red
+    },
+    init_verify(Conn, {Code, #{}, kraft:render(kraft, Template, Context)}, #{}).
+
+render_error(error, {missing_template, _App, Path}) ->
+    {"error_missing_template.html", [], #{template => Path}};
+render_error(_Class, _Reason) ->
+    {"error_exception.html", [], #{}}.
