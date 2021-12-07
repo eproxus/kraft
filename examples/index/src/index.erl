@@ -10,7 +10,8 @@
 
 start(_StartType, _StartArgs) ->
     kraft:start(#{port => 8090}, [
-        {"/", kraft_static, #{file => "index.html"}}
+        {"/", kraft_static, #{file => "index.html"}},
+        {"/error", module_does_not_exist, #{}}
     ]),
     {ok, self()}.
 
