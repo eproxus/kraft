@@ -1,11 +1,9 @@
 module.exports = {
-  purge: [],
-  darkMode: false, // or 'media' or 'class'
-  theme: {
-    extend: {},
-  },
-  variants: {
-    extend: {},
-  },
+  content: [
+      '../web/templates/**/*.html.mustache',
+      '../web/static/**/*.html',
+  ],
+  theme: {},
+  variants: {},
   plugins: [],
 }

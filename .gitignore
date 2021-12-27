@@ -20,7 +20,8 @@ rebar3.crashdump
 *~
 
 # Kraft
-**/priv/styles/node_modules
+**/priv/styles/.yarn
+**/priv/styles/.pnp.*
 examples/blog/priv/web/static
 examples/blog/rebar.lock
 

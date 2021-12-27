@@ -1,7 +1,9 @@
 {
-  "dependencies": {
-    "postcss": "^8.1.0",
-    "autoprefixer": "^10.2.5",
-    "tailwindcss": "^2.1.2"
+  "name": "kraft-blog-styles",
+  "packageManager": "yarn@3.1.1",
+  "devDependencies": {
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest"
   }
 }
