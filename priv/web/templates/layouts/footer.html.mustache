@@ -2,7 +2,7 @@
       <div class="sm:table-row-group">
         {{#properties}}
         <div class="sm:table-row">
-          <div class="sm:table-cell font-bold pr-2 capitalize">{{name}}</div>
+          <div class="sm:table-cell font-medium sm:pr-4 capitalize">{{name}}</div>
           <div class="sm:table-cell font-mono break-words text-gray-500">{{value}}</div>
         </div>
         {{/properties}}
@@ -10,7 +10,7 @@
     </div>
 
     {{#exception}}
-    <h2>Stacktrace</h2>
+    <h2 class="font-semibold mb-2">Stacktrace</h2>
     <div class="whitespace-pre font-mono rounded shadow-inner bg-gray-100 p-3
                 text-gray-500 overflow-x-scroll">{{exception}}</div>
 
