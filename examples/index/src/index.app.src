@@ -8,7 +8,7 @@
         stdlib,
         kraft
     ]},
-    {env,[]},
+    {env, []},
     {modules, []},
 
     {licenses, ["Apache 2.0"]},
