@@ -61,7 +61,6 @@ render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
     ReasonString = io_lib:format("~p", [Reason]),
     Context = ExtraContext#{
         title => kraft_http:status(Code),
-        error => true,
         properties => [
             #{name => method, value => maps:get(method, Req)},
             #{name => path, value => maps:get(path, Req)},
@@ -74,8 +73,7 @@ render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
         ] ++ Properties,
         class => Class,
         reason => ReasonString,
-        exception => iolist_to_binary(Exception),
-        color => red
+        exception => iolist_to_binary(Exception)
     },
     Body = kraft:render(
         kraft_conn:'_set_meta'(Conn, app, kraft), Template, Context
@@ -83,6 +81,6 @@ render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
     init_verify(Conn, {Code, #{}, Body}, #{}).
 
 render_error(error, {missing_template, _App, Path}) ->
-    {"error_missing_template.html", [], #{template => Path}};
+    {"error_missing_template.html", [], #{template => Path, warning => true}};
 render_error(_Class, _Reason) ->
-    {"error_exception.html", [], #{}}.
+    {"error_exception.html", [], #{error => true}}.
