@@ -3,7 +3,7 @@
         {{#properties}}
         <div class="sm:table-row">
           <div class="sm:table-cell font-medium sm:pr-4 capitalize">{{name}}</div>
-          <div class="sm:table-cell font-mono break-words text-gray-500">{{value}}</div>
+          <div class="sm:table-cell text-zinc-600 dark:text-zinc-300 font-mono break-words">{{value}}</div>
         </div>
         {{/properties}}
       </div>
@@ -11,8 +11,8 @@
 
     {{#exception}}
     <h2 class="font-semibold mb-2">Stacktrace</h2>
-    <div class="whitespace-pre font-mono rounded shadow-inner bg-gray-100 p-3
-                text-gray-500 overflow-x-scroll">{{exception}}</div>
+    <div class="whitespace-pre font-mono rounded shadow-inner bg-zinc-100 dark:bg-zinc-600 p-3
+                text-zinc-600 dark:text-zinc-300 overflow-x-scroll">{{exception}}</div>
 
     </div>
     {{/exception}}
