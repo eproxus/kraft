@@ -21,8 +21,8 @@ init(Req0, State) ->
         {ok, Req1, kraft_conn:'_meta'(Conn1)}
     catch
         Class:Reason:Stacktrace ->
-            {ok, render_error(500, Conn0, Req0, Class, Reason, Stacktrace),
-                State}
+            ReqErr = render_error(500, Conn0, Req0, Class, Reason, Stacktrace),
+            {ok, ReqErr, State}
     end.
 
 %--- Internal ------------------------------------------------------------------

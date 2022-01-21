@@ -14,6 +14,8 @@
 -ignore_xref({stop, 0}).
 -ignore_xref({stop, 1}).
 
+-include_lib("kernel/include/logger.hrl").
+
 %--- Types ---------------------------------------------------------------------
 
 -export_type([status/0]).
@@ -33,6 +35,8 @@
 start(Opts) -> start(Opts, []).
 
 start(#{port := Port} = Opts, Routes) ->
+    kraft_dev:maybe_start(Opts),
+
     App = detect_app(Opts),
 
     % Create routes
@@ -62,7 +66,7 @@ start(#{port := Port} = Opts, Routes) ->
         end,
     link(Pid),
 
-    logger:notice("Kraft listening on port ~b", [Port]),
+    ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
 
     ok.
 
@@ -70,12 +74,28 @@ stop() -> stop(detect_app(#{})).
 
 stop(App) -> cowboy:stop_listener(listener_name(App)).
 
+render(Conn, Template, Context) when is_list(Template) ->
+    render(Conn, iolist_to_binary(Template), Context);
 render(Conn, Template, Context) ->
     App = kraft_conn:'_meta'(Conn, app),
     Body = kraft_template:render(App, Template, Context),
     {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body}.
 
 %--- Internal ------------------------------------------------------------------
+
+start_development_helper(Opts) ->
+    case mode(Opts) of
+        dev -> {ok, _Pid} = kraft_dev:start_link();
+        _Other -> ok
+    end.
+
+mode(#{mode := Mode}) ->
+    Mode;
+mode(_Opts) ->
+    case code:is_loaded(rebar3) of
+        {file, _File} -> dev;
+        _Else -> prod
+    end.
 
 detect_app(Opts) ->
     case maps:find(app, Opts) of
@@ -93,11 +113,14 @@ listener_name(App) ->
 
 routes(App, Routes) ->
     lists:flatmap(
-        fun
-            ({_Path, _Handler, #{app := RouteApp}} = Route) ->
-                route(Route, RouteApp);
-            (Route) ->
-                route(Route, App)
+        fun({_Path, _Handler, Attr} = Route) ->
+            AppName =
+                case Attr of
+                    #{app := RouteApp} -> RouteApp;
+                    _Else -> App
+                end,
+            kraft_dev:watch(AppName),
+            route(Route, AppName)
         end,
         Routes
     ).

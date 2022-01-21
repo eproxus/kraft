@@ -7,13 +7,14 @@
 
 %--- API -----------------------------------------------------------------------
 
-path(App, template) -> filename:join([priv_dir(App), "web/templates"]);
-path(App, static) -> filename:join([priv_dir(App), "web/static"]).
+path(App, template) -> filename:join(priv_dir(App), "web/templates");
+path(App, static) -> filename:join(priv_dir(App), "web/static").
 
 path(App, template, File) ->
-    filename:join([path(App, template), File ++ ".mustache"]);
+    Template = <<(iolist_to_binary(File))/binary, ".mustache">>,
+    filename:join(path(App, template), Template);
 path(App, static, File) ->
-    filename:join([path(App, static), File]).
+    filename:join(path(App, static), File).
 
 relative(App, Path) ->
     case string:prefix(Path, priv_dir(App) ++ "/") of

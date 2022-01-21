@@ -11,7 +11,17 @@
         jsx,
         mapz
     ]},
-    {env, []},
+    {env, [
+        {cache, #{
+            template =>
+                {kraft_cache_ets, #{
+                    memory => infinity
+                    % memory => {mib, 64},
+                    % age => {minute, 5},
+                    % clean_interval => {second, 30}
+                }}
+        }}
+    ]},
     {modules, []},
 
     {licenses, ["Apache 2.0"]},

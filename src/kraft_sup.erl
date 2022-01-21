@@ -16,4 +16,8 @@ start_link() ->
 %--- Callbacks -----------------------------------------------------------------
 
 init([]) ->
-    {ok, {#{}, []}}.
+    {ok, {#{}, [child(kraft_template)]}}.
+
+child(Module) -> child(Module, []).
+
+child(Module, Args) -> #{id => Module, start => {Module, start_link, Args}}.
