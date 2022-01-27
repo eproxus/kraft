@@ -62,6 +62,8 @@ start(#{port := Port} = Opts, Routes) ->
         end,
     link(Pid),
 
+    logger:notice("Kraft listening on port ~b", [Port]),
+
     ok.
 
 stop() -> stop(detect_app(#{})).
