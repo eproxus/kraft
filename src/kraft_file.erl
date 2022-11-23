@@ -7,14 +7,13 @@
 
 %--- API -----------------------------------------------------------------------
 
-path(App, template) -> filename:join(priv_dir(App), "web/templates");
-path(App, static) -> filename:join(priv_dir(App), "web/static").
+path(App, static) -> path(App, static, "").
 
 path(App, template, File) ->
     Template = <<(iolist_to_binary(File))/binary, ".mustache">>,
-    filename:join(path(App, template), Template);
+    safe_priv_path(App, "web/templates", Template);
 path(App, static, File) ->
-    filename:join(path(App, static), File).
+    safe_priv_path(App, "web/static", File).
 
 relative(App, Path) ->
     case string:prefix(Path, priv_dir(App) ++ "/") of
@@ -28,4 +27,11 @@ priv_dir(App) ->
     case code:priv_dir(App) of
         Dir when is_list(Dir) -> Dir;
         {error, Reason} -> error({priv_dir, Reason})
+    end.
+
+safe_priv_path(App, Path, File) ->
+    Dir = filename:join(priv_dir(App), Path),
+    case filelib:safe_relative_path(File, Dir) of
+        unsafe -> error({unsafe_include, File});
+        FinalPath -> filename:join(Dir, FinalPath)
     end.

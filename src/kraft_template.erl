@@ -20,7 +20,8 @@
 
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, undefined, []).
 
-render(App, File, Context) ->
+render(App, RawFile, Context) ->
+    File = trim(RawFile),
     Template = kraft_cache:retrieve(template, [App, File], fun() ->
         parse(App, File)
     end),
@@ -28,14 +29,15 @@ render(App, File, Context) ->
 
 reload(App, File) -> reload(App, File, main).
 
-reload(App, File, Level) ->
+reload(App, RawFile, Level) ->
+    File = trim(RawFile),
+    Path = kraft_file:path(App, template, File),
     Template = parse(App, File),
     kraft_cache:update(template, [App, File], Template),
     ?LOG_INFO(#{template => File, event => reloaded, level => Level}, #{
         kraft_app => App
     }),
-    Deps = ets:match(?MODULE, {{App, File}, '$1'}),
-    [reload(App, D, dep) || [D] <- Deps],
+    [reload(App, D, dep) || [D] <- deps(App, File)],
     ok.
 
 %--- Callbacks -----------------------------------------------------------------
@@ -59,13 +61,13 @@ parse(App, File) ->
     Path = kraft_file:path(App, template, File),
     try
         PartialFileReader = fun(Dir, Key) ->
-            ets:insert(?MODULE, {{App, Key}, iolist_to_binary(File)}),
+            deps_insert(App, File, Key),
             bbmustache:default_partial_file_reader(Dir, Key)
         end,
         bbmustache:parse_file(Path, [{partial_file_reader, PartialFileReader}])
     catch
         error:file_not_found ->
-            error({missing_template, App, kraft_file:relative(App, Path)})
+            error({missing_template, App, kraft_file:relative(App, File)})
     end.
 
 compile(Template, Context) ->
