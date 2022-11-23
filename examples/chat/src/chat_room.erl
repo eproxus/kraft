@@ -23,8 +23,7 @@ info({message, From, Message}, #{conn := Conn} = State) ->
     Vars = #{message => Message, user => From},
     {[{text, kraft:render(Conn, "message.html", Vars)}], State}.
 
-terminate(_Reason, _State) ->
-    send_message("[left]").
+terminate(_Reason, _State) -> send_message("[left]").
 
 %--- Internal ------------------------------------------------------------------
 

@@ -10,13 +10,8 @@
 
 %--- API -----------------------------------------------------------------------
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link() -> supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %--- Callbacks -----------------------------------------------------------------
 
-init([]) ->
-    Children = [
-        #{id => chat, start => {pg, start_link, [chat]}}
-    ],
-    {ok, {#{}, Children}}.
+init([]) -> {ok, {#{}, [#{id => chat, start => {pg, start_link, [chat]}}]}}.
