@@ -13,16 +13,16 @@
 
 start(_StartType, _StartArgs) ->
     create_posts(),
-    kraft:start(#{port => 8091}, [
+    Ref = kraft:start(#{port => 8091}, [
         {"/", blog_index, #{message => <<"Welcome!">>}},
         {"/posts/:id", blog_post, #{}},
         {"/pages/:id", blog_page, #{}},
         {"/", kraft_static, #{}}
     ]),
-    blog_sup:start_link().
+    {ok, Pid} = blog_sup:start_link(),
+    {ok, Pid, Ref}.
 
-stop(_State) ->
-    kraft:stop().
+stop(Ref) -> kraft:stop(Ref).
 
 global_vars(Vars) ->
     Meta = maps:from_list(ets:tab2list(blog_meta)),

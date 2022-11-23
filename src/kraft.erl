@@ -3,7 +3,6 @@
 % API
 -export([start/1]).
 -export([start/2]).
--export([stop/0]).
 -export([stop/1]).
 -export([render/3]).
 
@@ -13,8 +12,6 @@
 -ignore_xref({start, 2}).
 -ignore_xref({stop, 0}).
 -ignore_xref({stop, 1}).
-
--include_lib("kernel/include/logger.hrl").
 
 %--- Types ---------------------------------------------------------------------
 
@@ -34,45 +31,19 @@
 
 start(Opts) -> start(Opts, []).
 
-start(#{port := Port} = Opts, Routes) ->
+start(Opts, Routes) ->
+    Owner = self(),
     kraft_dev:maybe_start(Opts),
-
     App = detect_app(Opts),
+    {ok, Ref} = kraft_instance:start(#{
+        app => App,
+        routes => Routes,
+        owner => Owner,
+        opts => Opts
+    }),
+    Ref.
 
-    % Create routes
-    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
-    AllRoutes = routes(App, [InternalRoutes | Routes]),
-    Dispatch = cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]),
-    persistent_term:put({kraft_dispatch, App}, Dispatch),
-
-    % Start Cowboy
-    Listener = listener_name(App),
-    ProtocolOpts = #{
-        env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
-        stream_handlers => [
-            kraft_fallback_h,
-            cowboy_compress_h,
-            cowboy_stream_h
-        ]
-    },
-    {ok, Pid} =
-        case Opts of
-            #{ssl_opts := SslOpts} ->
-                TransportOpts = [{port, Port} | SslOpts],
-                cowboy:start_tls(Listener, TransportOpts, ProtocolOpts);
-            _ ->
-                TransportOpts = [{port, Port}],
-                cowboy:start_clear(Listener, TransportOpts, ProtocolOpts)
-        end,
-    link(Pid),
-
-    ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
-
-    ok.
-
-stop() -> stop(detect_app(#{})).
-
-stop(App) -> cowboy:stop_listener(listener_name(App)).
+stop(Ref) -> kraft_instance:stop(Ref).
 
 render(Conn, Template, Context) when is_list(Template) ->
     render(Conn, iolist_to_binary(Template), Context);
@@ -82,20 +53,6 @@ render(Conn, Template, Context) ->
     {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body}.
 
 %--- Internal ------------------------------------------------------------------
-
-start_development_helper(Opts) ->
-    case mode(Opts) of
-        dev -> {ok, _Pid} = kraft_dev:start_link();
-        _Other -> ok
-    end.
-
-mode(#{mode := Mode}) ->
-    Mode;
-mode(_Opts) ->
-    case code:is_loaded(rebar3) of
-        {file, _File} -> dev;
-        _Else -> prod
-    end.
 
 detect_app(Opts) ->
     case maps:find(app, Opts) of
@@ -107,75 +64,3 @@ detect_app(Opts) ->
         {ok, A} ->
             A
     end.
-
-listener_name(App) ->
-    list_to_atom("kraft_listener_" ++ atom_to_list(App)).
-
-routes(App, Routes) ->
-    lists:flatmap(
-        fun({_Path, _Handler, Attr} = Route) ->
-            AppName =
-                case Attr of
-                    #{app := RouteApp} -> RouteApp;
-                    _Else -> App
-                end,
-            kraft_dev:watch(AppName),
-            route(Route, AppName)
-        end,
-        Routes
-    ).
-
-route({Path, {ws, Handler}, MState}, App) ->
-    route({Path, {ws, Handler}, MState, #{}}, App);
-route({Path, {ws, Handler}, MState, Opts}, App) ->
-    {Module, State} = kraft_ws_util:setup(Opts, App, Handler, MState),
-    [{Path, Module, State}];
-route({Path, kraft_static, #{file := File}}, App) ->
-    StaticFile = filename:join("web/static/", File),
-    [{Path, cowboy_static, {priv_file, App, StaticFile}}];
-route({Path, kraft_static, _State}, App) ->
-    static_routes(App, Path);
-route({Path, {cowboy, Handler}, State}, _App) ->
-    [{Path, Handler, State}];
-route({Path, Handler, State}, App) ->
-    [
-        {Path, kraft_controller, #{
-            handler => Handler,
-            app => App,
-            state => State
-        }}
-    ].
-
-static_routes(App, Path) ->
-    Default = [
-        {
-            uri_join(Path, "[...]"),
-            cowboy_static,
-            {priv_dir, App, "web/static"}
-        }
-    ],
-    Static = kraft_file:path(App, static),
-    Context = {Static, App, Path},
-    StaticRoute = fun(File, Acc) -> static_route(File, Context, Acc) end,
-    filelib:fold_files(Static, ".*", true, StaticRoute, Default).
-
-static_route(File, {Static, App, Path}, Acc) ->
-    Prefix = string:trim(string:prefix(File, Static), leading, "/"),
-    case filename:basename(Prefix) of
-        "index.html" ->
-            PrivFile = {priv_file, App, filename:join("web/static/", Prefix)},
-            SubDir =
-                case filename:dirname(Prefix) of
-                    "." -> "";
-                    Dir -> Dir
-                end,
-            IndexPath = uri_join(Path, SubDir),
-            [{IndexPath, cowboy_static, PrivFile} | Acc];
-        _ ->
-            Acc
-    end.
-
-uri_join(Path, SubPath) ->
-    Prefix = string:trim(Path, trailing, "/"),
-    Suffix = string:trim(SubPath, leading, "/"),
-    string:join([Prefix, Suffix], "/").

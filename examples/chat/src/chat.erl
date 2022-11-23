@@ -11,15 +11,15 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    kraft:start(#{port => 8093}, [
+    Ref = kraft:start(#{port => 8093}, [
         {"/chatroom", {ws, chat_room}, #{}, #{type => json}},
         {"/", ?MODULE, #{}},
         {"/", kraft_static, #{}}
     ]),
-    chat_sup:start_link().
+    {ok, Pid} = chat_sup:start_link(),
+    {ok, Pid, Ref}.
 
-stop(_State) ->
-    kraft:stop().
+stop(Ref) -> kraft:stop(Ref).
 
 init(Conn, _Params, _State) ->
     {200, #{}, kraft:render(Conn, "index.html", #{})}.

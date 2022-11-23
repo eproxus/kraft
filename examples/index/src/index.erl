@@ -11,15 +11,14 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    kraft:start(#{port => 8090}, [
+    Ref = kraft:start(#{port => 8090}, [
         {"/", kraft_static, #{file => "index.html"}},
         {"/error", module_does_not_exist, #{}},
         {"/missing_template", ?MODULE, #{}}
     ]),
-    {ok, self()}.
+    {ok, self(), Ref}.
 
-stop(_State) ->
-    kraft:stop().
+stop(Ref) -> kraft:stop(Ref).
 
 init(Conn, _Params, _State) ->
     {200, #{}, kraft:render(Conn, "missing", #{})}.

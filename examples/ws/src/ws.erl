@@ -9,7 +9,7 @@
 %--- Callbacks -----------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    kraft:start(#{port => 8092}, [
+    Ref = kraft:start(#{port => 8092}, [
         {"/raw/ws", {ws, ws_raw}, #{}},
         {"/json/ws", {ws, ws_json}, #{}, #{type => json, ping => disabled}},
         {"/jsonrpc/ws", {ws, ws_jsonrpc}, #{}, #{
@@ -18,7 +18,7 @@ start(_StartType, _StartArgs) ->
         }},
         {"/", kraft_static, #{}}
     ]),
-    ws_sup:start_link().
+    {ok, Pid} = ws_sup:start_link(),
+    {ok, Pid, Ref}.
 
-stop(_State) ->
-    kraft:stop().
+stop(_State) -> kraft:stop().

@@ -16,8 +16,16 @@ start_link() ->
 %--- Callbacks -----------------------------------------------------------------
 
 init([]) ->
-    {ok, {#{}, [child(kraft_template)]}}.
+    Children = [
+        worker(kraft_template),
+        supervisor(kraft_instance_sup)
+    ],
+    {ok, {#{}, Children}}.
 
-child(Module) -> child(Module, []).
+%--- Internal ------------------------------------------------------------------
 
-child(Module, Args) -> #{id => Module, start => {Module, start_link, Args}}.
+worker(Module) ->
+    #{id => Module, start => {Module, start_link, []}}.
+
+supervisor(Module) ->
+    #{id => Module, type => supervisor, start => {Module, start_link, []}}.
