@@ -21,5 +21,4 @@ start(_StartType, _StartArgs) ->
 
 stop(Ref) -> kraft:stop(Ref).
 
-init(Conn, _Params, _State) ->
-    {200, #{}, kraft:render(Conn, "index.html", #{})}.
+init(Conn, _Params, _State) -> kraft:render(Conn, "index.html", #{}).

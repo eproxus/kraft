@@ -12,4 +12,4 @@ init(Conn, _Params, #{message := Message}) ->
         message => Message,
         posts => [Post#{id => ID} || {ID, Post} <- ets:tab2list(blog_posts)]
     },
-    {200, #{}, kraft:render(Conn, "index.html", blog:global_vars(Vars))}.
+    kraft:render(Conn, "index.html", blog:global_vars(Vars)).

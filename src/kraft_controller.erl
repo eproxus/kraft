@@ -36,6 +36,8 @@ init_exec(Conn0) ->
         invalid_return -> error({kraft, ?MODULE, {invalid_return, Result}})
     end.
 
+init_verify(Conn0, {kraft_template, Headers, Body}, S0) ->
+    init_verify(Conn0, {200, Headers, Body}, S0);
 init_verify(Conn0, {Code, Headers, Body}, S0) ->
     init_verify(Conn0, {Code, Headers, Body, S0}, undefined);
 init_verify(Conn0, {Code, Headers, Body, S1}, _S0) when

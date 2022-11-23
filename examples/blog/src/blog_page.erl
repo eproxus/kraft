@@ -9,4 +9,4 @@
 
 init(Conn, #{id := ID}, _State) ->
     Vars = ets:lookup_element(blog_pages, binary_to_list(ID), 2),
-    {200, #{}, kraft:render(Conn, "page.html", blog:global_vars(Vars))}.
+    kraft:render(Conn, "page.html", blog:global_vars(Vars)).
