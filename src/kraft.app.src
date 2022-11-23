@@ -7,6 +7,7 @@
         kernel,
         stdlib,
         cowboy,
+        cowlib,
         bbmustache,
         jsx,
         mapz

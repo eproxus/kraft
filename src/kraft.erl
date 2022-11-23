@@ -50,7 +50,7 @@ render(Conn, Template, Context) when is_list(Template) ->
 render(Conn, Template, Context) ->
     App = kraft_conn:'_meta'(Conn, app),
     Body = kraft_template:render(App, Template, Context),
-    {kraft_template, #{<<"content-type">> => <<"text/html">>}, Body}.
+    {kraft_template, #{<<"content-type">> => mime_type(Template)}, Body}.
 
 %--- Internal ------------------------------------------------------------------
 
@@ -64,3 +64,7 @@ detect_app(Opts) ->
         {ok, A} ->
             A
     end.
+
+mime_type(File) ->
+    {Type, SubType, []} = cow_mimetypes:all(File),
+    [Type, $/, SubType].
