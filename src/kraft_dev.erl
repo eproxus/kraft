@@ -140,8 +140,10 @@ absolute_path([Dir | Path], Acc) ->
     absolute_path(Path, [Dir | Acc]).
 
 watchexec_start(Dir) ->
+    Command = lists:flatten(watchexec_cmd(Dir)),
+    ?LOG_DEBUG("Starting watchexec: ~p", [Command]),
     erlang:open_port(
-        {spawn, watchexec_cmd(Dir)},
+        {spawn, Command},
         [{line, 1024}, exit_status, use_stdio, binary, stderr_to_stdout]
     ).
 
