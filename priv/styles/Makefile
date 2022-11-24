@@ -7,12 +7,14 @@ CSS_ROOT = ../web/static/assets/styles
 CSS_IN = kraft.css
 CSS_OUT = $(CSS_ROOT)/$(CSS_IN)
 
-.PHONY: all
-all: $(CSS_OUT)
+all: help
+
+.PHONY: css
+css: $(CSS_OUT) ## Build CSS
 	@echo -n
 
 .PHONY: watch
-watch:
+watch: ## Watch HTML and continuously re-build CSS
 	@yarn tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --minify --watch
 
 $(CSS_OUT): $(CSS_IN) $(CSS_ROOT) $(TEMPLATES) $(HTML) $(STATIC)
@@ -22,7 +24,7 @@ $(CSS_ROOT):
 	@mkdir -p $@
 
 .PHONY: upgrade
-upgrade:
+upgrade: ## Upgrade Tailwind
 	@yarn up \
 		tailwindcss@latest \
   		@tailwindcss/typography@latest \
@@ -30,3 +32,8 @@ upgrade:
 
 .yarn/install-state.gz: package.json
 	@yarn install
+
+help: ## Show this help message
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| sort \
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
