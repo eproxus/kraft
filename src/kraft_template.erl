@@ -31,7 +31,6 @@ reload(App, File) -> reload(App, File, main).
 
 reload(App, RawFile, Level) ->
     File = trim(RawFile),
-    Path = kraft_file:path(App, template, File),
     Template = parse(App, File),
     kraft_cache:update(template, [App, File], Template),
     ?LOG_INFO(#{template => File, event => reloaded, level => Level}, #{
