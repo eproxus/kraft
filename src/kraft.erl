@@ -7,11 +7,11 @@
 -export([render/3]).
 
 % Public API
--ignore_xref({start, 1}).
--ignore_xref({render, 3}).
--ignore_xref({start, 2}).
--ignore_xref({stop, 0}).
--ignore_xref({stop, 1}).
+-ignore_xref(start/1).
+-ignore_xref(render/3).
+-ignore_xref(start/2).
+-ignore_xref(stop/0).
+-ignore_xref(stop/1).
 
 %--- Types ---------------------------------------------------------------------
 

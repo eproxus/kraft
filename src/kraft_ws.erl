@@ -2,13 +2,13 @@
 
 % Callbacks
 -export([init/2]).
--ignore_xref({init, 2}).
+-ignore_xref(init/2).
 -export([handle/2]).
--ignore_xref({handle, 2}).
+-ignore_xref(handle/2).
 -export([info/2]).
--ignore_xref({info, 2}).
+-ignore_xref(info/2).
 -export([terminate/3]).
--ignore_xref({terminate, 3}).
+-ignore_xref(terminate/3).
 
 %--- Types ---------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
 
 % API
 -export([start_link/0]).
--ignore_xref({start_link, 0}).
+-ignore_xref(start_link/0).
 -export([render/3]).
 -export([reload/2]).
 
