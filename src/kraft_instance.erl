@@ -94,11 +94,13 @@ route({Path, {ws, Handler}, MState}, App) ->
 route({Path, {ws, Handler}, MState, Opts}, App) ->
     {Module, State} = kraft_ws_util:setup(Opts, App, Handler, MState),
     [{Path, Module, State}];
-route({Path, kraft_static, #{file := File}}, App) ->
+route({Path, kraft_static, #{file := File} = State}, App) ->
     StaticFile = filename:join("web/static/", File),
-    [{Path, cowboy_static, {priv_file, App, StaticFile}}];
-route({Path, kraft_static, _State}, App) ->
-    static_routes(App, Path);
+    Handler = maps:get(handler, State, cowboy_static),
+    [{Path, Handler, {priv_file, App, StaticFile}}];
+route({Path, kraft_static, State}, App) ->
+    Handler = maps:get(handler, State, cowboy_static),
+    static_routes(App, Path, Handler);
 route({Path, {cowboy, Handler}, State}, _App) ->
     [{Path, Handler, State}];
 route({Path, Handler, State}, App) ->
@@ -110,20 +112,22 @@ route({Path, Handler, State}, App) ->
         }}
     ].
 
-static_routes(App, Path) ->
+static_routes(App, Path, Handler) ->
     Default = [
         {
             uri_join(Path, "[...]"),
-            cowboy_static,
+            Handler,
             {priv_dir, App, "web/static"}
         }
     ],
     Static = kraft_file:path(App, static),
     Context = {Static, App, Path},
-    StaticRoute = fun(File, Acc) -> static_route(File, Context, Acc) end,
+    StaticRoute = fun(File, Acc) ->
+        static_route(File, Context, Handler, Acc)
+    end,
     filelib:fold_files(Static, ".*", true, StaticRoute, Default).
 
-static_route(File, {Static, App, Path}, Acc) ->
+static_route(File, {Static, App, Path}, Handler, Acc) ->
     Prefix = string:trim(string:prefix(File, Static), leading, "/"),
     case filename:basename(Prefix) of
         "index.html" ->
@@ -134,7 +138,7 @@ static_route(File, {Static, App, Path}, Acc) ->
                     Dir -> Dir
                 end,
             IndexPath = uri_join(Path, SubDir),
-            [{IndexPath, cowboy_static, PrivFile} | Acc];
+            [{IndexPath, Handler, PrivFile} | Acc];
         _ ->
             Acc
     end.
