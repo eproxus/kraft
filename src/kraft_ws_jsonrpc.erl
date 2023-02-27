@@ -61,7 +61,7 @@ handle_messages({batch, Messages}, State0) ->
         {[], State0},
         Unpacked
     ),
-    {[lists:flatten(Replies)], State3};
+    {lists:flatten(Replies), State3};
 handle_messages({single, Message}, State0) ->
     handle_message(unpack(Message), State0).
 
