@@ -66,7 +66,7 @@ parse(App, File) ->
         bbmustache:parse_file(Path, [{partial_file_reader, PartialFileReader}])
     catch
         error:file_not_found ->
-            error({missing_template, App, kraft_file:relative(App, File)})
+            error({missing_template, App, kraft_file:relative(App, Path)})
     end.
 
 compile(Template, Context) ->
