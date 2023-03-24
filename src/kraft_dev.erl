@@ -19,6 +19,7 @@
 % -compile(export_all).
 
 -record(s, {
+    watchexec = disabled,
     dirs = #{},
     monitors = #{}
 }).
@@ -50,18 +51,29 @@ watch(App) ->
 %--- Callbacks -----------------------------------------------------------------
 
 init(undefined) ->
-    {ok, #s{}}.
+    State =
+        case os:find_executable("watchexec") of
+            false ->
+                ?LOG_WARNING(#{
+                    reason => watchexec_missing,
+                    message => "Template reloading will be disabled"
+                }),
+                #s{};
+            Path ->
+                #s{watchexec = Path}
+        end,
+    {ok, State}.
 
 handle_call({watch, App, Dir}, _From, S) when is_map_key(Dir, S#s.dirs) ->
     ?LOG_DEBUG(#{monitor => Dir, event => duplicate}, #{kraft_app => App}),
     {reply, ok, S};
+handle_call({watch, App, Dir}, _From, #s{watchexec = disabled} = S) ->
+    {reply, {error, watchexec_disabled}, S};
 handle_call({watch, App, Dir}, _From, #s{dirs = Dirs} = S) ->
-    case {os:find_executable("watchexec"), filelib:is_dir(Dir)} of
-        {false, _} ->
-            {reply, {error, watchexec_missing}, S};
-        {_Path, false} ->
+    case filelib:is_dir(Dir) of
+        false ->
             {reply, {error, enoent}, S};
-        {_Path, true} ->
+        true ->
             Port = watchexec_start(Dir),
             {reply, ok, S#s{
                 monitors = maps:put(
@@ -98,7 +110,16 @@ handle_info(Info, _State) ->
 handle(App, Dir, #{path := Path, written := [File]}) ->
     Full = filename:join(Path, File),
     Relative = string:prefix(Full, Dir),
-    kraft_template:reload(App, filename:rootname(Relative, <<".mustache">>));
+    try
+        kraft_template:reload(App, filename:rootname(Relative, <<".mustache">>))
+    catch
+        Class:Reason ->
+            ?LOG_ERROR(#{
+                class => Class,
+                reason => Reason,
+                message => "Could not reload template"
+            })
+    end;
 handle(App, Dir, Event) when map_size(Event) == 0 ->
     ?LOG_NOTICE(#{monitor => Dir, event => started}, #{kraft_app => App}).
 
