@@ -42,9 +42,14 @@ insert_fallback(Command, _State) ->
     Command.
 
 render(Code, State, Headers) ->
-    Body = kraft_template:render(kraft, "error.html", context(Code, State)),
-    ContentLength = integer_to_binary(iolist_size(Body)),
-    {response, Code, Headers#{<<"content-length">> => ContentLength}, Body}.
+    % FIXME: Find out a better way to generate a Conn object here
+    Conn = kraft_conn:'_set_meta'(kraft_conn:new(fake_req, #{}), app, kraft),
+    {kraft_template, TemplateHeaders, Body} =
+        kraft:render(Conn, "error.html", context(Code, State)),
+    FinalHeaders = maps:merge(Headers, TemplateHeaders#{
+        <<"content-length">> => integer_to_binary(iolist_size(Body))
+    }),
+    {response, Code, FinalHeaders, Body}.
 
 context(Code, State) ->
     #{

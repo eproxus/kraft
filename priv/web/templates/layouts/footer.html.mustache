@@ -1,22 +1,55 @@
-    <div class="sm:table mb-6">
-      <div class="sm:table-row-group">
-        {{#properties}}
-        <div class="sm:table-row">
-          <div class="sm:table-cell font-medium sm:pr-4 capitalize">{{name}}</div>
-          <div class="sm:table-cell text-zinc-600 dark:text-zinc-300 font-mono break-words">{{value}}</div>
-        </div>
-        {{/properties}}
-      </div>
-    </div>
-
-    {{#exception}}
-    <h2 class="font-semibold mb-2">Stacktrace</h2>
-    <div class="whitespace-pre font-mono rounded shadow-inner bg-zinc-100 dark:bg-zinc-600 p-3
-                text-zinc-600 dark:text-zinc-300 overflow-x-scroll">{{exception}}</div>
-
-    </div>
-    {{/exception}}
+<div class="overflow-x-auto">
+  <div class="inline-grid grid-cols-[repeat(2,auto)] gap-x-2">
+    {{#properties}}
+    <div class="font-medium capitalize">{{name}}</div>
+    <div class="text-zinc-600 font-mono whitespace-pre-wrap break-words">{{value}}</div>
+    {{/properties}}
   </div>
+</div>
+
+{{#stacktrace}}
+<div id="stacktrace" class="overflow-x-auto">
+  <h2 class="mt-6 font-semibold mb-2">Stacktrace</h2>
+
+  <div id="stack" class="inline-grid gap-y-2 grid-cols-[repeat(3,auto)]">
+    {{#stack}}
+    {{#items}}
+    {{#args}}
+    <div class="col-span-3 font-mono">
+      <span>{{module}}:</span><span class="text-zinc-600 break-words">{{func}}</span><span
+        class="whitespace-pre-wrap text-zinc-600 break-words font-mono">{{args}}</span>
+    </div>
+    {{/args}}
+    {{^args}}
+    {{#module}}<div class="text-right font-mono">{{.}}:</div>{{/module}}
+    {{#func}}<div class="text-zinc-600 whitespace-nowrap font-mono">{{.}}{{#arity}}/{{.}}{{/arity}}</div>{{/func}}
+    {{/args}}
+    {{#file}}
+    <div>
+      <a class="flex ml-2 px-1 whitespace-nowrap rounded-md bg-zinc-100 w-full inline-block {{#path}}hover:bg-sky-100{{/path}}"
+        {{#path}}href="file://{{.}}" {{/path}}>
+        {{#otp}}
+        <div
+          class="float-right flex inline-block relative -left-1 bg-zinc-200 border border-zinc-400 rounded-md px-1 items-center">
+          <span class="align-middle font-semibold text-sm">OTP</span>
+        </div>
+        {{/otp}}
+        <span class="font-mono">{{#path}}
+          {{/path}}{{#dir}}<span class="text-zinc-500 {{#path}}hover:text-zinc-700{{/path}}">{{.}}</span>/{{/dir}}<span
+            class="text-sky-600 {{#path}}hover:text-sky-700{{/path}}">{{name}}</span>{{#line}}:{{line}}{{/line}}{{#path}}{{/path}}
+        </span>
+      </a>
+    </div>
+    {{/file}}
+    {{/items}}
+    {{/stack}}
+  </div>{{! stack }}
+
+</div>{{! stacktrace }}
+{{/stacktrace}}
+
+</div>{{! error-box }}
 
 </body>
+
 </html>

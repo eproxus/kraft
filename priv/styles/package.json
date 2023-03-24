@@ -1,6 +1,6 @@
 {
   "name": "kraft-styles",
-  "packageManager": "yarn@3.3.0",
+  "packageManager": "yarn@3.5.0",
   "devDependencies": {
     "@tailwindcss/forms": "latest",
     "@tailwindcss/typography": "latest",

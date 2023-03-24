@@ -1,5 +1,8 @@
 {{> layouts/header.html }}
 
-    <p class="text-base rounded-md bg-red-200 dark:bg-red-900 text-zinc-700 dark:text-zinc-200 p-4 mb-4">Exception <span class="rounded bg-black/10 px-2 py-1 font-mono">{{class}}:{{reason}}</span></p>
+  <p class="text-base rounded-md bg-red-200 text-zinc-700 p-4 mb-4">
+    Exception {{class}}:
+    <span class="rounded bg-black/10 px-2 py-1 font-mono break-words">{{message}}</span>
+  </p>
 
 {{> layouts/footer.html }}

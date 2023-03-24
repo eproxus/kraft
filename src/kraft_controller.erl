@@ -58,11 +58,11 @@ collect_headers(_Headers, _Body) ->
     throw(invalid_return).
 
 render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
-    Exception = erl_error:format_exception(Class, Reason, Stacktrace),
     {Template, Properties, ExtraContext} = render_error(Class, Reason),
     ReasonString = io_lib:format("~p", [Reason]),
     Context = ExtraContext#{
         title => kraft_http:status(Code),
+        message => message(Class, Reason, Stacktrace),
         properties => [
             #{name => method, value => maps:get(method, Req)},
             #{name => path, value => maps:get(path, Req)},
@@ -75,7 +75,7 @@ render_error(Code, Conn, Req, Class, Reason, Stacktrace) ->
         ] ++ Properties,
         class => Class,
         reason => ReasonString,
-        exception => iolist_to_binary(Exception)
+        stacktrace => stack_trace(Stacktrace)
     },
     Body = kraft:render(
         kraft_conn:'_set_meta'(Conn, app, kraft), Template, Context
@@ -86,3 +86,49 @@ render_error(error, {missing_template, _App, Path}) ->
     {"error_missing_template.html", [], #{template => Path, warning => true}};
 render_error(_Class, _Reason) ->
     {"error_exception.html", [], #{error => true}}.
+
+message(Class, Reason, [Call | _]) ->
+    Formatted = erl_error:format_exception(Class, Reason, [Call]),
+    BClass = atom_to_binary(Class),
+    Pattern = <<"^exception ", BClass/binary, ": (?<error>.*?):?\s*$">>,
+    Opts = [{capture, all_names, binary}, anchored, multiline],
+    {match, [Message]} = re:run(Formatted, Pattern, Opts),
+    Message.
+
+stack_trace(Stacktrace) ->
+    #{stack => #{items => lists:map(fun stack_call/1, Stacktrace)}}.
+
+stack_call({M, F, A, Attrs}) ->
+    Call = #{module => M, func => F},
+    lists:foldl(fun stack_attr/2, Call, [{args, A} | Attrs]).
+
+stack_attr({args, Arity}, Call) when is_integer(Arity) ->
+    Call#{arity => Arity};
+stack_attr({args, Args}, #{module := M, func := F} = Call) when is_list(Args) ->
+    ArgsFormat = lists:join(",", lists:duplicate(length(Args), "~p")),
+    Format = lists:flatten(["~p:~p(", ArgsFormat, ")"]),
+    Pretty = io_lib:format(Format, [M, F] ++ Args),
+    FormattedArgs = string:prefix(Pretty, io_lib:format("~p:~p", [M, F])),
+    Call#{args => iolist_to_binary(FormattedArgs)};
+stack_attr({file, "/" ++ _ = File}, Call) ->
+    Call#{
+        file => #{path => iolist_to_binary(File)},
+        dir => strip_prefix(iolist_to_binary(filename:dirname(File))),
+        name => iolist_to_binary(filename:basename(File))
+    };
+stack_attr({file, OTPFile}, Call) ->
+    Call#{file => #{name => iolist_to_binary(OTPFile)}, otp => true};
+stack_attr({line, Line}, Call) ->
+    Call#{line => Line};
+stack_attr(_Attr, Call) ->
+    Call.
+
+strip_prefix(Path) ->
+    {ok, CWD} = file:get_cwd(),
+    strip_if_prefix(Path, CWD ++ "/").
+
+strip_if_prefix(String, Prefix) ->
+    case string:prefix(String, Prefix) of
+        nomatch -> String;
+        Short -> Short
+    end.
