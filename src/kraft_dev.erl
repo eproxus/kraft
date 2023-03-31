@@ -67,7 +67,7 @@ init(undefined) ->
 handle_call({watch, App, Dir}, _From, S) when is_map_key(Dir, S#s.dirs) ->
     ?LOG_DEBUG(#{monitor => Dir, event => duplicate}, #{kraft_app => App}),
     {reply, ok, S};
-handle_call({watch, App, Dir}, _From, #s{watchexec = disabled} = S) ->
+handle_call({watch, _App, _Dir}, _From, #s{watchexec = disabled} = S) ->
     {reply, {error, watchexec_disabled}, S};
 handle_call({watch, App, Dir}, _From, #s{dirs = Dirs} = S) ->
     case filelib:is_dir(Dir) of
@@ -108,20 +108,33 @@ handle_info(Info, _State) ->
 %--- Internal ------------------------------------------------------------------
 
 handle(App, Dir, #{path := Path, written := [File]}) ->
+    handle_file(App, Dir, Path, File, written);
+handle(App, Dir, #{path := Path, rename := [File]}) ->
+    handle_file(App, Dir, Path, File, rename);
+handle(App, Dir, #{path := Path, removed := [File]}) ->
+    handle_file(App, Dir, Path, File, removed);
+handle(App, Dir, Event) when map_size(Event) == 0 ->
+    ?LOG_NOTICE(#{monitor => Dir, event => started}, #{kraft_app => App}).
+
+handle_file(App, Dir, Path, File, Event) ->
     Full = filename:join(Path, File),
     Relative = string:prefix(Full, Dir),
+    RootName = filename:rootname(Relative, <<".mustache">>),
     try
-        kraft_template:reload(App, filename:rootname(Relative, <<".mustache">>))
+        case filelib:is_regular(Full) of
+            false -> kraft_template:remove(App, RootName);
+            true -> kraft_template:reload(App, RootName)
+        end
     catch
-        Class:Reason ->
+        Class:Reason:ST ->
             ?LOG_ERROR(#{
                 class => Class,
                 reason => Reason,
-                message => "Could not reload template"
+                event => Event,
+                message => "Could not reload template",
+                stacktrace => ST
             })
-    end;
-handle(App, Dir, Event) when map_size(Event) == 0 ->
-    ?LOG_NOTICE(#{monitor => Dir, event => started}, #{kraft_app => App}).
+    end.
 
 mode(#{mode := Mode}) ->
     Mode;

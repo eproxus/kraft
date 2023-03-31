@@ -9,6 +9,7 @@
 -ignore_xref(start_link/0).
 -export([render/3]).
 -export([reload/2]).
+-export([remove/2]).
 
 % Callbacks
 -export([init/1]).
@@ -27,16 +28,12 @@ render(App, RawFile, Context) ->
     end),
     compile(Template, Context).
 
-reload(App, File) -> reload(App, File, main).
+reload(App, RawFile) -> reload(App, trim(RawFile), main).
 
-reload(App, RawFile, Level) ->
+remove(App, RawFile) ->
     File = trim(RawFile),
-    Template = parse(App, File),
-    kraft_cache:update(template, [App, File], Template),
-    ?LOG_INFO(#{template => File, event => reloaded, level => Level}, #{
-        kraft_app => App
-    }),
-    [reload(App, D, dep) || [D] <- deps(App, File)],
+    kraft_cache:clear(template, [App, File]),
+    ?LOG_INFO(#{template => File, event => removed}, #{kraft_app => App}),
     ok.
 
 %--- Callbacks -----------------------------------------------------------------
@@ -53,6 +50,15 @@ handle_cast(Request, _State) -> error({unknown_cast, Request}).
 handle_info(Info, _State) -> error({unknown_info, Info}).
 
 %--- Internal ------------------------------------------------------------------
+
+reload(App, File, Level) ->
+    Template = parse(App, File),
+    kraft_cache:update(template, [App, File], Template),
+    ?LOG_INFO(#{template => File, event => reloaded, level => Level}, #{
+        kraft_app => App
+    }),
+    [reload(App, D, dep) || [D] <- deps(App, File)],
+    ok.
 
 trim(File) -> string:trim(File, leading, [$/]).
 

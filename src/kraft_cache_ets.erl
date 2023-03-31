@@ -116,11 +116,13 @@ clean_cache_memory(Table, Target, [{_TS, Key} | Oldest]) ->
 clear(_Table, _Prefix, '$end_of_table') ->
     ok;
 clear(Table, Prefix, Key) ->
+    % next must be called before delete, otherwise it crashes
+    Next = ets:next(Table, Key),
     case lists:prefix(Prefix, Key) of
         true -> ets:delete(Table, Key);
         false -> ok
     end,
-    clear(Table, Prefix, ets:next(Table, Key)).
+    clear(Table, Prefix, Next).
 
 convert_memory(infinity) -> infinity;
 % No one will ever need more than a 1 T(i)B of cache :-)
