@@ -14,7 +14,7 @@ css: $(CSS_OUT) ## Build CSS
 	@echo -n
 
 .PHONY: watch
-watch: ## Watch HTML and continuously re-build CSS
+watch: css ## Watch HTML and continuously re-build CSS
 	@yarn tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --minify --watch
 
 $(CSS_OUT): $(CSS_IN) $(CSS_ROOT) $(TEMPLATES) $(HTML) $(STATIC)
@@ -24,7 +24,7 @@ $(CSS_ROOT):
 	@mkdir -p $@
 
 .PHONY: upgrade
-upgrade: ## Upgrade Tailwind
+upgrade: css ## Upgrade Tailwind
 	@yarn up \
 		tailwindcss@latest \
   		@tailwindcss/typography@latest \
@@ -33,6 +33,7 @@ upgrade: ## Upgrade Tailwind
 .yarn/install-state.gz: package.json
 	@yarn install
 
+.PHONY: help
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| sort \
