@@ -2,7 +2,7 @@
   <div class="inline-grid grid-cols-[repeat(2,auto)] gap-x-2">
     {{#properties}}
     <div class="font-medium capitalize">{{name}}</div>
-    <div class="text-zinc-600 font-mono whitespace-pre-wrap break-words">{{value}}</div>
+    <div class="text-zinc-600 dark:text-zinc-400 font-mono whitespace-pre-wrap break-words">{{value}}</div>
     {{/properties}}
   </div>
 </div>
@@ -16,27 +16,30 @@
     {{#items}}
     {{#args}}
     <div class="col-span-3 font-mono">
-      <span>{{module}}:</span><span class="text-zinc-600 break-words">{{func}}</span><span
-        class="whitespace-pre-wrap text-zinc-600 break-words font-mono">{{args}}</span>
+      <span>{{module}}:</span><span class="text-zinc-600 dark:text-zinc-400 break-words">{{func}}</span><span
+        class="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400 break-words font-mono">{{args}}</span>
     </div>
     {{/args}}
     {{^args}}
     {{#module}}<div class="text-right font-mono">{{.}}:</div>{{/module}}
-    {{#func}}<div class="text-zinc-600 whitespace-nowrap font-mono">{{.}}{{#arity}}/{{.}}{{/arity}}</div>{{/func}}
+    {{#func}}<div class="text-zinc-600 dark:text-zinc-400 whitespace-nowrap font-mono">{{.}}{{#arity}}/{{.}}{{/arity}}
+    </div>{{/func}}
     {{/args}}
     {{#file}}
-    <div>
-      <a class="flex ml-2 px-1 whitespace-nowrap rounded-md bg-zinc-100 w-full inline-block {{#path}}hover:bg-sky-100{{/path}}"
+    <div class="group">
+      <a class="flex ml-2 px-1 whitespace-nowrap rounded-md bg-zinc-100 dark:bg-zinc-800 w-full inline-block {{#path}}group-hover:bg-sky-100 dark:group-hover:bg-sky-950{{/path}}"
         {{#path}}href="file://{{.}}" {{/path}}>
         {{#otp}}
         <div
-          class="float-right flex inline-block relative -left-1 bg-zinc-200 border border-zinc-400 rounded-md px-1 items-center">
+          class="float-right flex inline-block relative -left-1 bg-zinc-200 dark:bg-zinc-700 border-2 border-zinc-400 dark:border-zinc-500 rounded-md px-1 items-center">
           <span class="align-middle font-semibold text-sm">OTP</span>
         </div>
         {{/otp}}
         <span class="font-mono">{{#path}}
-          {{/path}}{{#dir}}<span class="text-zinc-500 {{#path}}hover:text-zinc-700{{/path}}">{{.}}</span>/{{/dir}}<span
-            class="text-sky-600 {{#path}}hover:text-sky-700{{/path}}">{{name}}</span>{{#line}}:{{line}}{{/line}}{{#path}}{{/path}}
+          {{/path}}{{#dir}}<span
+            class="text-zinc-500 dark:text-zinc-400 {{#path}}group-hover:text-zinc-700 dark:group-hover:text-zinc-300{{/path}}">{{.}}/</span>{{/dir}}<span
+            class="text-sky-600 {{#path}}group-hover:text-sky-700 dark:group-hover:text-sky-400{{/path}}">{{name}}</span>{{#line}}<span
+            class="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100">:{{line}}</span>{{/line}}{{#path}}{{/path}}
         </span>
       </a>
     </div>
