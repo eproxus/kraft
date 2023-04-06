@@ -19,6 +19,10 @@
       <span>{{module}}:</span><span class="text-zinc-600 dark:text-zinc-400 break-words">{{func}}</span><span
         class="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400 break-words font-mono">{{args}}</span>
     </div>
+    {{#file}}
+    {{! Empty placeholder for mod:func, it is rendered in its own row above }}
+    <div class="col-span-2"></div>
+    {{/file}}
     {{/args}}
     {{^args}}
     {{#module}}<div class="text-right font-mono">{{.}}:</div>{{/module}}
