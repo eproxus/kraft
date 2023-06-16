@@ -7,7 +7,7 @@
 
 %--- Types ---------------------------------------------------------------------
 
--callback init(kraft:conn(), State::any()) -> kraft:response().
+-callback init(kraft:conn(), State :: any()) -> kraft:response().
 
 %--- API -----------------------------------------------------------------------
 

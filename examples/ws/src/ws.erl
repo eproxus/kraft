@@ -22,4 +22,3 @@ start(_StartType, _StartArgs) ->
     {ok, Pid, Ref}.
 
 stop(Ref) -> kraft:stop(Ref).
-

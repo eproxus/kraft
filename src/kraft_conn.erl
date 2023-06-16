@@ -58,11 +58,13 @@ path(#{adapter := {Module, Req}} = Conn0) ->
 params(#{adapter := {Module, Req}} = Conn0) -> {Module:bindings(Req), Conn0}.
 
 response(Conn0, Status, Headers, Body) ->
-    mapz:deep_merge(Conn0, #{resp => #{
-        status => Status,
-        headers => Headers,
-        body => Body
-    }}).
+    mapz:deep_merge(Conn0, #{
+        resp => #{
+            status => Status,
+            headers => Headers,
+            body => Body
+        }
+    }).
 
 response_status(Conn0, Status) when is_integer(Status) ->
     mapz:deep_put([resp, status], Status, Conn0).
@@ -81,12 +83,17 @@ response_body(Conn0, Body) ->
 
 respond(#{resp := #{sent := true}}) ->
     error(response_already_sent);
-respond(#{resp := #{status := Status, body := Body, headers := Headers}, adapter := {Module, Req0}} = Conn0) ->
+respond(
+    #{
+        resp := #{status := Status, body := Body, headers := Headers},
+        adapter := {Module, Req0}
+    } = Conn0
+) ->
     Req1 = Module:reply(Status, Headers, Body, Req0),
     mapz:deep_merge(Conn0, #{
         resp => #{sent => true},
-        adapter => {Module, Req1}}
-    );
+        adapter => {Module, Req1}
+    });
 respond(_Conn0) ->
     error(status_code_not_set).
 

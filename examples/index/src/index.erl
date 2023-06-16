@@ -21,12 +21,20 @@ start(_StartType, _StartArgs) ->
 stop(Ref) -> kraft:stop(Ref).
 
 init(_Conn, #{error := undef}) ->
-    StackTrace = try
-        throw(foo)
-    catch
-        throw:foo:ST ->
-            [{module_does_not_exist,function_does_not_exist, [#{big => #{complex => #{argument => {with,many,[terms,inside]}}}}],[]}|ST]
-    end,
+    StackTrace =
+        try
+            throw(foo)
+        catch
+            throw:foo:ST ->
+                Module = module_does_not_exist,
+                Function = function_does_not_exist,
+                Arg = #{
+                    big => #{
+                        complex => #{argument => {with, many, [terms, inside]}}
+                    }
+                },
+                [{Module, Function, [Arg], []} | ST]
+        end,
     erlang:raise(exit, undef, StackTrace);
 init(Conn, #{error := missing_template}) ->
     {respond, Conn, {template, "missing", #{}}}.

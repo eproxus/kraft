@@ -10,7 +10,8 @@
 -export_type([response/0]).
 
 -type body_raw() :: {raw, iodata()} | iodata().
--type body() :: kraft_template:body_template() | kraft_json:body_json() | body_raw().
+-type body() ::
+    kraft_template:body_template() | kraft_json:body_json() | body_raw().
 -type response_body() :: {respond, kraft_conn:conn(), body()}.
 -type response() :: response_body() | kraft_conn:conn().
 
@@ -20,14 +21,15 @@
 
 init(Req0, #{mod := Mod} = State) ->
     Conn0 = kraft_conn:new(Req0, State),
-    Conn1 = try
-        handle(Mod:exec(Conn0))
-    catch
-        throw:Reply ->
-            kraft_conn:respond(response(Conn0, Reply));
-        Class:Reason:Stacktrace ->
-            render_error(500, Conn0, Class, Reason, Stacktrace)
-    end,
+    Conn1 =
+        try
+            handle(Mod:exec(Conn0))
+        catch
+            throw:Reply ->
+                kraft_conn:respond(response(Conn0, Reply));
+            Class:Reason:Stacktrace ->
+                render_error(500, Conn0, Class, Reason, Stacktrace)
+        end,
     {cowboy_req, Req1} = kraft_conn:'_adapter'(Conn1),
     {ok, Req1, kraft_conn:'_meta'(Conn1)}.
 

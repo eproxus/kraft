@@ -18,10 +18,13 @@
 
 -type commands() :: [frame()].
 -type state() :: any().
--type frame() :: kraft_json:body_json() | cow_ws:frame() | {active, boolean()} |
-    {deflate, boolean()} |
-    {set_options, map()} |
-    {shutdown_reason, any()}.
+-type frame() ::
+    kraft_json:body_json()
+    | cow_ws:frame()
+    | {active, boolean()}
+    | {deflate, boolean()}
+    | {set_options, map()}
+    | {shutdown_reason, any()}.
 
 -optional_callbacks([handshake/3]).
 -callback handshake(kraft:conn(), kraft_conn:params(), state()) ->
