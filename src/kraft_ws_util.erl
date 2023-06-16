@@ -40,8 +40,9 @@ callbacks(Callbacks, #{handler := Handler} = State0) ->
 handshake(Req, #{callbacks := #{{handshake, 3} := false}} = State0) ->
     {cowboy_websocket, Req, State0};
 handshake(Req, #{handler := Handler, state := MState0} = State0) ->
-    Conn = kraft_conn:new(Req, State0),
-    case Handler:handshake({Req, MState0}, kraft_conn:params(Conn), MState0) of
+    Conn0 = kraft_conn:new(Req, State0),
+    {Params, _Conn1} = kraft_conn:params(Conn0),
+    case Handler:handshake({Req, MState0}, Params, MState0) of
         {reply, Code, Headers, Body} ->
             Resp = cowboy_req:reply(Code, Headers, Body, Req),
             {ok, Resp, State0};

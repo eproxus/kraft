@@ -17,15 +17,17 @@
 
 -export_type([status/0]).
 -export_type([headers/0]).
--export_type([body/0]).
--export_type([conn/0]).
 -export_type([params/0]).
+-export_type([body/0]).
+-export_type([response/0]).
+-export_type([conn/0]).
 
--type status() :: cowboy:http_status().
--type headers() :: cowboy:http_headers().
--type body() :: cowboy_req:resp_body().
+-type status() :: non_neg_integer() | binary().
+-type headers() :: #{atom() => iolist()}.
+-type params() :: kraft_conn:params().
+-type body() :: kraft_json:body_json() | cowboy_req:resp_body().
+-type response() :: kraft_handler:response().
 -type conn() :: kraft_conn:conn().
--type params() :: map:map().
 
 %--- API -----------------------------------------------------------------------
 
@@ -45,12 +47,8 @@ start(Opts, Routes) ->
 
 stop(Ref) -> kraft_instance:stop(Ref).
 
-render(Conn, Template, Context) when is_list(Template) ->
-    render(Conn, iolist_to_binary(Template), Context);
-render(Conn, Template, Context) ->
-    App = kraft_conn:'_meta'(Conn, app),
-    Body = kraft_template:render(App, Template, Context),
-    {kraft_template, #{<<"content-type">> => mime_type(Template)}, Body}.
+render(Conn0, Template, Context) ->
+    kraft_template:render(Conn0, Template, Context).
 
 %--- Internal ------------------------------------------------------------------
 
@@ -64,7 +62,3 @@ detect_app(Opts) ->
         {ok, A} ->
             A
     end.
-
-mime_type(File) ->
-    {Type, SubType, []} = cow_mimetypes:all(File),
-    [Type, $/, SubType].

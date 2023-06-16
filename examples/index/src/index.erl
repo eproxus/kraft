@@ -6,7 +6,7 @@
 % Callbacks
 -export([start/2]).
 -export([stop/1]).
--export([init/3]).
+-export([init/2]).
 
 %--- Callbacks -----------------------------------------------------------------
 
@@ -20,9 +20,13 @@ start(_StartType, _StartArgs) ->
 
 stop(Ref) -> kraft:stop(Ref).
 
-init(_Conn, _Params, #{error := undef}) ->
-    module_does_not_exist:function_does_not_exist(#{
-        big => #{complex => #{argument => {with, many, [terms, inside]}}}
-    });
-init(Conn, _Params, #{error := missing_template}) ->
-    kraft:render(Conn, "missing", #{}).
+init(_Conn, #{error := undef}) ->
+    StackTrace = try
+        throw(foo)
+    catch
+        throw:foo:ST ->
+            [{module_does_not_exist,function_does_not_exist, [#{big => #{complex => #{argument => {with,many,[terms,inside]}}}}],[]}|ST]
+    end,
+    erlang:raise(exit, undef, StackTrace);
+init(Conn, #{error := missing_template}) ->
+    {respond, Conn, {template, "missing", #{}}}.

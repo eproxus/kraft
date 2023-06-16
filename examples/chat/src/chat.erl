@@ -6,7 +6,7 @@
 % Callbacks
 -export([start/2]).
 -export([stop/1]).
--export([init/3]).
+-export([init/2]).
 
 %--- Callbacks -----------------------------------------------------------------
 
@@ -21,4 +21,4 @@ start(_StartType, _StartArgs) ->
 
 stop(Ref) -> kraft:stop(Ref).
 
-init(Conn, _Params, _State) -> kraft:render(Conn, "index.html", #{}).
+init(Conn, _State) -> {respond, Conn, {template, "index.html", #{}}}.

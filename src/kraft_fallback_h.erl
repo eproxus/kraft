@@ -43,12 +43,13 @@ insert_fallback(Command, _State) ->
 
 render(Code, State, Headers) ->
     % FIXME: Find out a better way to generate a Conn object here
-    Conn = kraft_conn:'_set_meta'(kraft_conn:new(fake_req, #{}), app, kraft),
-    {kraft_template, TemplateHeaders, Body} =
-        kraft:render(Conn, "error.html", context(Code, State)),
-    FinalHeaders = maps:merge(Headers, TemplateHeaders#{
+    Conn0 = kraft_conn:'_set_meta'(kraft_conn:new(fake_req, #{}), app, kraft),
+    Conn1 = kraft_template:response(Conn0, "error.html", context(Code, State)),
+    Body = kraft_conn:response_body(Conn1),
+    Conn3 = kraft_conn:response_headers(Conn1, Headers#{
         <<"content-length">> => integer_to_binary(iolist_size(Body))
     }),
+    FinalHeaders = kraft_conn:response_headers(Conn3),
     {response, Code, FinalHeaders, Body}.
 
 context(Code, State) ->

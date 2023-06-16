@@ -19,7 +19,7 @@
 -type state() :: any().
 
 -optional_callbacks([handshake/3]).
--callback handshake(kraft:conn(), kraft:params(), state()) ->
+-callback handshake(kraft:conn(), kraft_conn:params(), state()) ->
     {reply, kraft:status(), kraft:headers(), kraft:body()}
     | {ok, state()}.
 

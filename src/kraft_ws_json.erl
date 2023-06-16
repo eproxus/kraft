@@ -16,12 +16,15 @@
 
 %--- Types ---------------------------------------------------------------------
 
--type commands() :: cowboy_websocket:commands().
+-type commands() :: [frame()].
 -type state() :: any().
--type frame() :: {json, kraft_json:json()}.
+-type frame() :: kraft_json:body_json() | cow_ws:frame() | {active, boolean()} |
+    {deflate, boolean()} |
+    {set_options, map()} |
+    {shutdown_reason, any()}.
 
 -optional_callbacks([handshake/3]).
--callback handshake(kraft:conn(), kraft:params(), state()) ->
+-callback handshake(kraft:conn(), kraft_conn:params(), state()) ->
     {reply, kraft:status(), kraft:headers(), kraft:body()}
     | {ok, state()}.
 
@@ -60,7 +63,6 @@ encode(close = Close) -> Close;
 encode({close, _IOData} = Close) -> Close;
 encode({close, _Code, _IOData} = Close) -> Close;
 encode({json, JSON}) -> {text, kraft_json:encode(JSON)};
-encode({text, {kraft_template, _Headers, Body}}) -> {text, Body};
 encode({text, Text}) -> {text, Text};
 encode({binary, Binary}) -> {binary, Binary}.
 

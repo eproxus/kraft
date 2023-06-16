@@ -10,6 +10,7 @@
 -export([render/3]).
 -export([reload/2]).
 -export([remove/2]).
+-export([response/3]).
 
 % Callbacks
 -export([init/1]).
@@ -17,11 +18,18 @@
 -export([handle_cast/2]).
 -export([handle_info/2]).
 
+%--- Types ---------------------------------------------------------------------
+
+-export_type([body_template/0]).
+
+-type body_template() :: {template, file:name(), bbmustache:data()}.
+
 %--- API -----------------------------------------------------------------------
 
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, undefined, []).
 
-render(App, RawFile, Context) ->
+render(Conn0, RawFile, Context) ->
+    App = kraft_conn:'_meta'(Conn0, app),
     File = trim(RawFile),
     Template = kraft_cache:retrieve(template, [App, File], fun() ->
         parse(App, File)
@@ -35,6 +43,13 @@ remove(App, RawFile) ->
     kraft_cache:clear(template, [App, File]),
     ?LOG_INFO(#{template => File, event => removed}, #{kraft_app => App}),
     ok.
+
+response(Conn0, Template, Context) ->
+    Body = render(Conn0, Template, Context),
+    Conn1 = kraft_conn:response_body(Conn0, Body),
+    kraft_conn:response_headers(Conn1, #{
+        <<"content-type">> => mime_type(Template)
+    }).
 
 %--- Callbacks -----------------------------------------------------------------
 
@@ -60,7 +75,7 @@ reload(App, File, Level) ->
     [reload(App, D, dep) || [D] <- deps(App, File)],
     ok.
 
-trim(File) -> string:trim(File, leading, [$/]).
+trim(File) -> string:trim(iolist_to_binary(File), leading, [$/]).
 
 parse(App, File) ->
     Path = kraft_file:path(App, template, File),
@@ -87,3 +102,7 @@ deps_insert(App, File, Key) ->
     ets:insert(?MODULE, {{App, Relative}, File}).
 
 deps(App, File) -> ets:match(?MODULE, {{App, File}, '$1'}).
+
+mime_type(File) ->
+    {Type, SubType, []} = cow_mimetypes:all(iolist_to_binary(File)),
+    [Type, $/, SubType].

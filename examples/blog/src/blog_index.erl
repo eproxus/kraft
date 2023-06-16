@@ -3,13 +3,13 @@
 -behaviour(kraft_controller).
 
 % API
--export([init/3]).
+-export([init/2]).
 
 %--- API -----------------------------------------------------------------------
 
-init(Conn, _Params, #{message := Message}) ->
+init(Conn, #{message := Message}) ->
     Vars = #{
         message => Message,
         posts => [Post#{id => ID} || {ID, Post} <- ets:tab2list(blog_posts)]
     },
-    kraft:render(Conn, "index.html", blog:global_vars(Vars)).
+    {respond, Conn, {template, "index.html", blog:global_vars(Vars)}}.

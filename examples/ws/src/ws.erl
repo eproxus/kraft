@@ -21,4 +21,5 @@ start(_StartType, _StartArgs) ->
     {ok, Pid} = ws_sup:start_link(),
     {ok, Pid, Ref}.
 
-stop(_State) -> kraft:stop().
+stop(Ref) -> kraft:stop(Ref).
+
