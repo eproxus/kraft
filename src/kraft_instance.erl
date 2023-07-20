@@ -27,57 +27,147 @@ stop(Ref) -> kraft_instance_sup:stop_instance(Ref).
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
+init(#{app := App, owner := Owner, listeners := ListenerSpecs}) ->
     % FIXME: Use monitor instead
     link(Owner),
     % Trap exits so terminate/2 gets called
     % (see  https://www.erlang.org/doc/man/gen_server.html#Module:terminate-2)
     process_flag(trap_exit, true),
-    % Create routes
-    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
-    AllRoutes = routes(App, [InternalRoutes | maps:get(routes, Params)]),
-    Dispatch = cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]),
-    persistent_term:put({kraft_dispatch, App}, Dispatch),
+    Listeners = maps:map(
+        fun(Addr, Params) -> start_listener(App, Addr, Params) end,
+        ListenerSpecs
+    ),
+    {ok, Listeners}.
 
-    % Start Cowboy
-    ListenerName = listener_name(App),
+handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
+
+handle_cast(Request, _State) -> error({unknown_cast, Request}).
+
+% TODO: Handle owner/Cowboy crashes here
+handle_info(Info, _State) -> error({unknown_info, Info}).
+
+terminate(_Reason, Listeners) ->
+    maps:foreach(
+        fun(_Addr, #{listener := Name, persistent_terms := PTerms}) ->
+            ok = cowboy:stop_listener(Name),
+            [true = persistent_term:erase(T) || T <- PTerms]
+        end,
+        Listeners
+    ).
+
+%--- Internal ------------------------------------------------------------------
+
+start_listener(App, Address, #{routes := Routes} = Params) ->
+    ListenerRef = make_ref(),
+
+    #{scheme := Scheme, host := Host, port := Port} = uri(Address),
+
+    % Routes
+    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
+    AllRoutes = routes(App, [InternalRoutes | Routes]),
+    Dispatch = cowboy_router:compile([
+        {route_host(Host), lists:flatten(AllRoutes)}
+    ]),
+    RoutesKey = {kraft_dispatch, App, ListenerRef},
+    persistent_term:put(RoutesKey, Dispatch),
+
+    % Cowboy
+    ListenerName = {kraft_listener, App, ListenerRef},
     ProtocolOpts = #{
-        env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
+        env => #{dispatch => {persistent_term, RoutesKey}},
         stream_handlers => [
             kraft_fallback_h,
             cowboy_compress_h,
             cowboy_stream_h
         ]
     },
-    {ok, Listener} =
-        case Opts of
-            #{ssl_opts := SslOpts} ->
-                TransportOpts = [{port, Port} | SslOpts],
-                cowboy:start_tls(ListenerName, TransportOpts, ProtocolOpts);
-            _ ->
-                TransportOpts = [{port, Port}],
-                cowboy:start_clear(ListenerName, TransportOpts, ProtocolOpts)
+    {Start, ExtraTransportOpts} =
+        % FIXME: Use Address to calculate opts
+        case Scheme of
+            <<"http">> -> {start_clear, []};
+            <<"https">> -> {start_tls, maps:get(ssl_opts, Params, [])}
         end,
+    TransportOpts = [{port, Port} | ExtraTransportOpts],
+    {ok, ListenerPid} = cowboy:Start(ListenerName, TransportOpts, ProtocolOpts),
     % FIXME: Use monitor instead
-    link(Listener),
+    link(ListenerPid),
 
     ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
+    #{listener => ListenerName, persistent_terms => [RoutesKey]}.
 
-    {ok, ListenerName}.
+uri(RawAddress) when is_map(RawAddress) ->
+    Address = maps:map(
+        fun
+            (scheme, <<"http">> = Scheme) -> Scheme;
+            (scheme, <<"https">> = Scheme) -> Scheme;
+            (scheme, http) -> <<"http">>;
+            (scheme, https) -> <<"https">>;
+            (scheme, _) -> error({invalid_listener_scheme, RawAddress});
+            (host, Host) when is_binary(Host) -> Host;
+            (host, _) -> error({invalid_listener_host, RawAddress});
+            (port, Port) when is_integer(Port) -> Port;
+            (port, _) -> error({invalid_listener_port, RawAddress});
+            (_, _) -> error({invalid_listener_address, RawAddress})
+        end,
+        RawAddress
+    ),
+    case maps:merge(#{host => <<"*">>}, Address) of
+        #{scheme := _, port := _} = A -> A;
+        #{scheme := <<"https">>} = A -> A#{port => 443};
+        #{scheme := <<"http">>} = A -> A#{port => 80};
+        #{port := 443} = A -> A#{scheme => <<"https">>};
+        #{port := _} = A -> A#{scheme => <<"http">>}
+    end;
+% Address -> Expanded
+%   localhost          -> http://localhost:80
+%   example.com        -> http://example.com:80
+%   :443               -> https://*:443
+%   http://example.com -> http://example.com:80
+%   localhost:8080     -> http://localhost:8080
+%   127.0.0.1          -> http://127.0.0.1:80
+%   *.example.com      -> http://[...].example.com:80
+%   http://            -> http://*:80
+uri(Address) when is_list(Address); is_binary(Address) ->
+    {ok, Pattern} = re:compile(
+        <<
+            "^"
+            "((?<PROTOCOL>https?):\/\/)? # Optional protocol\n"
+            "(?<HOST>[^/:]*?)            # Host (can be empty)\n"
+            "(:(?<PORT>\\d+))?           # Optional port\n"
+            "$"
+        >>,
+        [extended]
+    ),
+    PatternOpts = [anchored, {capture, all_names, binary}],
+    {Host, Port, Scheme} =
+        case re:run(Address, Pattern, PatternOpts) of
+            {match, [H0, P0, S0]} ->
+                {P1, S1} = uri_port_scheme(P0, S0),
+                {uri_host(H0), P1, S1};
+            _ ->
+                error({invalid_listener_address, Address})
+        end,
+    URIString = <<Scheme/binary, "://", Host/binary, ":", Port/binary>>,
+    ?LOG_WARNING(URIString),
+    uri_string:parse(URIString).
 
-handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
+uri_host(<<>>) -> <<"*">>;
+uri_host(Host) -> Host.
 
-handle_cast(Request, _State) -> error({unknown_cast, Request}).
+uri_port_scheme(<<>>, <<>>) -> {<<"80">>, <<"http">>};
+uri_port_scheme(<<>>, <<"https">>) -> {<<"443">>, <<"http">>};
+uri_port_scheme(<<>>, <<"http">>) -> {<<"80">>, <<"http">>};
+uri_port_scheme(<<"80">>, <<>>) -> {<<"80">>, <<"http">>};
+uri_port_scheme(<<"443">>, <<>>) -> {<<"443">>, <<"https">>};
+uri_port_scheme(Port, <<"http">>) -> {Port, <<"http">>};
+uri_port_scheme(Port, <<"https">>) -> {Port, <<"https">>};
+uri_port_scheme(Port, <<>>) -> {Port, <<"http">>};
+uri_port_scheme(_Port, Scheme) -> error({invalid_listener_scheme, Scheme}).
 
-% TODO: Handler owner/Cowboy crashes here
-handle_info(Info, _State) -> error({unknown_info, Info}).
-
-terminate(_Reason, ListenerName) ->
-    cowboy:stop_listener(ListenerName).
-
-%--- Internal ------------------------------------------------------------------
-
-listener_name(App) -> {kraft_listener, App, make_ref()}.
+route_host(<<"*">>) ->
+    '_';
+route_host(Host) ->
+    binary:replace(Host, <<"*">>, <<"[...]">>).
 
 routes(App, Routes) ->
     lists:flatmap(

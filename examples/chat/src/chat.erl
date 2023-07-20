@@ -11,11 +11,15 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    Ref = kraft:start(#{port => 8093}, [
-        {"/chatroom", {ws, chat_room}, #{}, #{type => json}},
-        {"/", ?MODULE, #{}},
-        {"/", kraft_static, #{}}
-    ]),
+    Ref = kraft:start(#{
+        ":8093" => #{
+            routes => [
+                {"/chatroom", {ws, chat_room}, #{}, #{type => json}},
+                {"/", ?MODULE, #{}},
+                {"/", kraft_static, #{}}
+            ]
+        }
+    }),
     {ok, Pid} = chat_sup:start_link(),
     {ok, Pid, Ref}.
 

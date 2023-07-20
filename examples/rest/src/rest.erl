@@ -9,10 +9,14 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    Ref = kraft:start(#{port => 8094}, [
-        {"/api", {cowboy, rest_api}, #{}},
-        {"/", kraft_static, #{}}
-    ]),
+    Ref = kraft:start(#{
+        ":8094" => #{
+            routes => [
+                {"/api", {cowboy, rest_api}, #{}},
+                {"/", kraft_static, #{}}
+            ]
+        }
+    }),
     {ok, self(), Ref}.
 
 stop(Ref) -> kraft:stop(Ref).

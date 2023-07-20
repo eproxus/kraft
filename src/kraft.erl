@@ -31,15 +31,15 @@
 
 %--- API -----------------------------------------------------------------------
 
-start(Opts) -> start(Opts, []).
+start(Listeners) -> start(Listeners, #{}).
 
-start(Opts, Routes) ->
+start(Listeners, Opts) ->
     Owner = self(),
     kraft_dev:maybe_start(Opts),
     App = detect_app(Opts),
     {ok, Ref} = kraft_instance:start(#{
         app => App,
-        routes => Routes,
+        listeners => Listeners,
         owner => Owner,
         opts => Opts
     }),

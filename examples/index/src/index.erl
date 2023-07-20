@@ -11,11 +11,15 @@
 %--- Callbacks -----------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    Ref = kraft:start(#{port => 8090}, [
-        {"/", kraft_static, #{file => "index.html"}},
-        {"/error", ?MODULE, #{error => undef}},
-        {"/missing_template", ?MODULE, #{error => missing_template}}
-    ]),
+    Ref = kraft:start(#{
+        #{scheme => http, port => 8090} => #{
+            routes => [
+                {"/", kraft_static, #{file => "index.html"}},
+                {"/error", ?MODULE, #{error => undef}},
+                {"/missing_template", ?MODULE, #{error => missing_template}}
+            ]
+        }
+    }),
     {ok, self(), Ref}.
 
 stop(Ref) -> kraft:stop(Ref).

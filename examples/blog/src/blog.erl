@@ -13,12 +13,16 @@
 
 start(_StartType, _StartArgs) ->
     create_posts(),
-    Ref = kraft:start(#{port => 8091}, [
-        {"/", blog_index, #{message => <<"Welcome!">>}},
-        {"/posts/:id", blog_post, #{}},
-        {"/pages/:id", blog_page, #{}},
-        {"/", kraft_static, #{}}
-    ]),
+    Ref = kraft:start(#{
+        ":8091" => #{
+            routes => [
+                {"/", blog_index, #{message => <<"Welcome!">>}},
+                {"/posts/:id", blog_post, #{}},
+                {"/pages/:id", blog_page, #{}},
+                {"/", kraft_static, #{}}
+            ]
+        }
+    }),
     {ok, Pid} = blog_sup:start_link(),
     {ok, Pid, Ref}.
 
