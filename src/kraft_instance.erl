@@ -104,11 +104,21 @@ route({Path, kraft_static, State}, App) ->
 route({Path, {cowboy, Handler}, State}, _App) ->
     [{Path, Handler, State}];
 route({Path, Handler, State}, App) ->
+    route({Path, Handler, State, #{}}, App);
+route({Path, Handler, State, Opts}, App) ->
+    Mod =
+        case Opts of
+            #{type := controller} -> kraft_controller;
+            #{type := Type} -> error({invalid_handler_type, Type});
+            _ -> kraft_controller
+        end,
     [
-        {Path, kraft_controller, #{
+        {Path, kraft_handler, #{
+            mod => Mod,
             handler => Handler,
             app => App,
-            state => State
+            state => State,
+            route => iolist_to_binary(Path)
         }}
     ].
 
