@@ -1,0 +1,16 @@
+{application, todo, [
+    {description, "A TODO example in Kraft"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {todo, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        kraft
+    ]},
+    {env, []},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.

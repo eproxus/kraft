@@ -33,6 +33,7 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
     % Trap exits so terminate/2 gets called
     % (see  https://www.erlang.org/doc/man/gen_server.html#Module:terminate-2)
     process_flag(trap_exit, true),
+
     % Create routes
     Dispatch = compile_cowboy(App, maps:get(routes, Params), Opts),
     DispatchKey = {kraft_dispatch, App, make_ref()},
@@ -62,7 +63,10 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
 
     ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
 
-    {ok, ListenerName}.
+    {ok, #{
+        listener => ListenerName,
+        dispatch => DispatchKey
+    }}.
 
 handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
 
@@ -71,8 +75,10 @@ handle_cast(Request, _State) -> error({unknown_cast, Request}).
 % TODO: Handler owner/Cowboy crashes here
 handle_info(Info, _State) -> error({unknown_info, Info}).
 
-terminate(_Reason, ListenerName) ->
-    cowboy:stop_listener(ListenerName).
+terminate(_Reason, #{listener := ListenerName, dispatch := DispatchKey}) ->
+    cowboy:stop_listener(ListenerName),
+    % FIXME: Delete content handler persistent terms
+    persistent_term:erase(DispatchKey).
 
 %--- Internal ------------------------------------------------------------------
 
@@ -135,12 +141,13 @@ route({Path, {cowboy, Handler}, State}, _App) ->
     [{Path, Handler, State}];
 route({Path, Handler, State}, App) ->
     route({Path, Handler, State, #{}}, App);
-route({Path, Handler, State, Opts}, App) ->
-    Mod =
+route({RootPath, Handler, State, Opts}, App) ->
+    {Mod, Path} =
         case Opts of
-            #{type := controller} -> kraft_controller;
+            #{type := rest} -> {kraft_rest, uri_join(RootPath, "[...]")};
+            #{type := controller} -> {kraft_controller, RootPath};
             #{type := Type} -> error({invalid_handler_type, Type});
-            _ -> kraft_controller
+            _ -> {kraft_controller, RootPath}
         end,
     [
         {Path, kraft_handler, #{

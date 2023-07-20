@@ -17,6 +17,11 @@
 
 decode(Binary) -> jsx:decode(Binary, [{labels, attempt_atom}]).
 
+decode_content(<<"application">>, <<"json">>, _Params, Value) ->
+    decode(Value).
+
+encode_content(JSON) -> {encode(JSON), <<"application/json; charset=utf8">>}.
+
 decode_stream(Binary) ->
     jsx:decode(Binary, [{labels, attempt_atom}, stream, return_tail]).
 

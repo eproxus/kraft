@@ -26,20 +26,20 @@ init(Req0, #{mod := Mod} = State) ->
             handle(Mod:exec(Conn0))
         catch
             throw:Reply ->
-                kraft_conn:respond(response(Conn0, Reply));
+                response(Conn0, Reply);
             Class:Reason:Stacktrace ->
                 render_error(500, Conn0, Class, Reason, Stacktrace)
         end,
-    {cowboy_req, Req1} = kraft_conn:'_adapter'(Conn1),
-    {ok, Req1, kraft_conn:'_meta'(Conn1)}.
+    Conn2 = kraft_conn:respond(Conn1),
+    {cowboy_req, Req1} = kraft_conn:'_adapter'(Conn2),
+    {ok, Req1, kraft_conn:'_meta'(Conn2)}.
 
 %--- API -----------------------------------------------------------------------
 
-handle({respond, Conn0, Response}) ->
-    kraft_conn:respond(response(Conn0, Response));
-handle(Conn0) ->
-    kraft_conn:respond(Conn0).
+handle({respond, Conn0, Response}) -> response(Conn0, Response);
+handle(Conn0) -> Conn0.
 
+% FIXME: Validate response tuple types inside kraft_conn?
 response(Conn0, {template, _, _} = Body) ->
     response(Conn0, {200, #{}, Body});
 response(Conn0, {json, _} = Body) ->
@@ -64,15 +64,13 @@ response(_Conn0, Reply) ->
 render_error(Status, Conn0, Class, Reason, Stacktrace) ->
     {Template, Properties, ExtraContext} = render_error(Class, Reason),
     ReasonString = io_lib:format("~p", [Reason]),
-    {Method, Conn1} = kraft_conn:method(Conn0),
-    {Path, Conn2} = kraft_conn:path(Conn1),
     Context = ExtraContext#{
         title => kraft_http:status(Status),
         message => message(Class, Reason, Stacktrace),
         properties => [
-            #{name => method, value => Method},
-            #{name => path, value => Path},
-            #{name => app, value => kraft_conn:'_meta'(Conn2, app)},
+            #{name => method, value => maps:get(method, Conn0)},
+            #{name => path, value => maps:get(path, Conn0)},
+            #{name => app, value => kraft_conn:'_meta'(Conn0, app)},
             #{name => class, value => Class},
             #{name => reason, value => ReasonString}
         ] ++ Properties,
@@ -80,11 +78,10 @@ render_error(Status, Conn0, Class, Reason, Stacktrace) ->
         reason => ReasonString,
         stacktrace => stack_trace(Stacktrace)
     },
-    Conn3 = kraft_template:response(
-        kraft_conn:'_set_meta'(Conn2, app, kraft), Template, Context
+    Conn1 = kraft_template:response(
+        kraft_conn:'_set_meta'(Conn0, app, kraft), Template, Context
     ),
-    Conn4 = kraft_conn:response_status(Conn3, Status),
-    kraft_conn:respond(Conn4).
+    kraft_conn:response_status(Conn1, Status).
 
 render_error(error, {missing_template, _App, Path}) ->
     {"error_missing_template.html", [], #{template => Path, warning => true}};
