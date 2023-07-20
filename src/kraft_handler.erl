@@ -40,6 +40,19 @@ handle({respond, Conn0, Response}) ->
 handle(Conn0) ->
     kraft_conn:respond(Conn0).
 
+% handle(Conn0, Status) when is_integer(Status) -> handle(Conn0, Status, #{}, <<>>);
+% handle(Conn0, Body) -> handle(Conn0, 200, #{}, Body).
+
+% handle(Conn0, Status, Headers) -> handle(Conn0, Status, Headers, <<>>).
+
+% handle(Conn0, Status, Headers, Body) ->
+%     Conn1 = kraft_conn:response_status(Conn0, Status),
+%     Conn2 = body(Conn1, Body),
+%     % Set user headers last, in case they want to override generated headers
+%     Conn3 = kraft_conn:response_headers(Conn2, Headers),
+%     kraft_conn:respond(Conn3).
+
+% FIXME: Validate response tuple types inside kraft_conn?
 response(Conn0, {template, _, _} = Body) ->
     response(Conn0, {200, #{}, Body});
 response(Conn0, {json, _} = Body) ->
@@ -56,6 +69,8 @@ response(Conn0, {Status, Headers}) ->
     response(Conn0, {Status, Headers, <<>>});
 response(Conn0, Status) when is_integer(Status) ->
     response(Conn0, {Status, #{}});
+% response(_OldConn, #{'_type' := kraft_conn} = Conn0) ->
+%     kraft_conn:respond(Conn0);
 response(_Conn0, Reply) ->
     error({invalid_reply, Reply}).
 

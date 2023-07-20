@@ -4,6 +4,7 @@
 -export([new/2]).
 -export([method/1]).
 -export([path/1]).
+-export([body/1]).
 -export([params/1]).
 -export([response/4]).
 -export([response_status/2]).
@@ -53,6 +54,15 @@ path(#{request := #{path := Path}} = Conn0) ->
 path(#{adapter := {Module, Req}} = Conn0) ->
     Path = kraft_util:split_path(Module:path(Req)),
     {Path, mapz:deep_put([request, path], Path, Conn0)}.
+
+body(#{adapter := {Module, Req}} = Conn0) ->
+    case Module:has_body(Req) of
+        true ->
+            {Body, Req1} = body(Req, Module, <<>>),
+            {Body, Conn0#{apdapter := {Module, Req1}}};
+        false ->
+            {undefined, Conn0}
+    end.
 
 params(#{adapter := {Module, Req}} = Conn0) -> {Module:bindings(Req), Conn0}.
 
@@ -108,3 +118,20 @@ respond(_Conn0) ->
     mapz:deep_put([meta | Path], Value, Conn0).
 
 '_adapter'(#{adapter := Adapter}) -> Adapter.
+
+%--- Internal ------------------------------------------------------------------
+
+body(Req0, Module, Acc) ->
+    % TODO = Module:parse_header(<<"content-type">>, Req),
+    case Module:header(<<"content-type">>, Req0) of
+        <<"application/json">> -> ok;
+        <<"application/x-www-form-urlencoded">> -> ok;
+        _ -> throw(415)
+    end,
+    case Module:read_body(Req0) of
+        {ok, Data, Req1} ->
+            Body = jsx:decode(<<Acc/binary, Data/binary>>),
+            {Body, Req1};
+        {more, Data, Req1} ->
+            body(Req1, Module, <<Acc/binary, Data/binary>>)
+    end.

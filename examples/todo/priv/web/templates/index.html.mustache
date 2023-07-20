@@ -1,0 +1,21 @@
+{{> common/header.html }}
+
+<ul class="list-none p-0 space-y-2">
+    {{#items}}
+    <li class="group m-0 p-0 cursor-pointer">
+        <label id="item-label-{{id}}" class="cursor-pointer rounded hover:text-[Canvas] inline-block w-full group-hover:bg-[Field] px-2 py-0 inline-flex items-center space-x-2">
+            <input id="item-check-{{id}}" type="checkbox" class="cursor-pointer rounded border-0 hover:border-2 bg-[Field] text-[AccentColor] focus:border-gray-300 focus:ring-black group-hover:border-[AccentColor] hover:ring-black peer" {{state}}/>
+            <span class="peer-checked:line-through">{{text}}</span>
+        </label>
+    </li>
+    {{/items}}
+</ul>
+
+<form action="/add" method="post">
+    <label>
+        <input type="text" name="new-item" id="new-item" autocapitalize="sentences" required minlength="1">
+        <input type="submit" value="+">
+    </label>
+</form>
+
+{{> common/footer.html }}

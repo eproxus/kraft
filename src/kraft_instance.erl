@@ -37,12 +37,13 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
     InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
     AllRoutes = routes(App, [InternalRoutes | maps:get(routes, Params)]),
     Dispatch = cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]),
-    persistent_term:put({kraft_dispatch, App}, Dispatch),
+    RouteKey = {kraft_dispatch, App},
+    persistent_term:put(RouteKey, Dispatch),
 
     % Start Cowboy
     ListenerName = listener_name(App),
     ProtocolOpts = #{
-        env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
+        env => #{dispatch => {persistent_term, RouteKey}},
         stream_handlers => [
             kraft_fallback_h,
             cowboy_compress_h,
@@ -63,7 +64,10 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
 
     ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
 
-    {ok, ListenerName}.
+    {ok, #{
+        listener => ListenerName,
+        routes => RouteKey
+    }}.
 
 handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
 
@@ -72,8 +76,10 @@ handle_cast(Request, _State) -> error({unknown_cast, Request}).
 % TODO: Handler owner/Cowboy crashes here
 handle_info(Info, _State) -> error({unknown_info, Info}).
 
-terminate(_Reason, ListenerName) ->
-    cowboy:stop_listener(ListenerName).
+terminate(_Reason, #{listener := ListenerName, routes := RouteKey}) ->
+    cowboy:stop_listener(ListenerName),
+    % FIXME: Delete content handler persistent terms
+    persistent_term:delete(RouteKey).
 
 %--- Internal ------------------------------------------------------------------
 
@@ -113,6 +119,7 @@ route({Path, Handler, State}, App) ->
 route({Path, Handler, State, Opts}, App) ->
     Mod =
         case Opts of
+            #{type := rest} -> kraft_rest;
             #{type := controller} -> kraft_controller;
             #{type := Type} -> error({invalid_handler_type, Type});
             _ -> kraft_controller
