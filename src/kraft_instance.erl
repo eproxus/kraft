@@ -28,7 +28,11 @@ stop(Ref) -> kraft_instance_sup:stop_instance(Ref).
 %--- Callbacks -----------------------------------------------------------------
 
 init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
+    % FIXME: Use monitor instead
     link(Owner),
+    % Trap exits so terminate/2 gets called
+    % (see  https://www.erlang.org/doc/man/gen_server.html#Module:terminate-2)
+    process_flag(trap_exit, true),
     % Create routes
     InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
     AllRoutes = routes(App, [InternalRoutes | maps:get(routes, Params)]),
@@ -54,25 +58,26 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
                 TransportOpts = [{port, Port}],
                 cowboy:start_clear(ListenerName, TransportOpts, ProtocolOpts)
         end,
+    % FIXME: Use monitor instead
     link(Listener),
 
     ?LOG_NOTICE(#{started => #{port => Port}}, #{kraft_app => kraft}),
 
-    {ok, Listener}.
+    {ok, ListenerName}.
 
 handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
 
 handle_cast(Request, _State) -> error({unknown_cast, Request}).
 
+% TODO: Handler owner/Cowboy crashes here
 handle_info(Info, _State) -> error({unknown_info, Info}).
 
-terminate(_Reason, Listener) ->
-    cowboy:stop_listener(Listener).
+terminate(_Reason, ListenerName) ->
+    cowboy:stop_listener(ListenerName).
 
 %--- Internal ------------------------------------------------------------------
 
-listener_name(App) ->
-    list_to_atom("kraft_listener_" ++ atom_to_list(App)).
+listener_name(App) -> {kraft_listener, App, make_ref()}.
 
 routes(App, Routes) ->
     lists:flatmap(
