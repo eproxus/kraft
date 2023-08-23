@@ -37,12 +37,13 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
     InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
     AllRoutes = routes(App, [InternalRoutes | maps:get(routes, Params)]),
     Dispatch = cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]),
-    persistent_term:put({kraft_dispatch, App}, Dispatch),
+    DispatchKey = {kraft_dispatch, App, make_ref()},
+    persistent_term:put(DispatchKey, Dispatch),
 
     % Start Cowboy
     ListenerName = listener_name(App),
     ProtocolOpts = #{
-        env => #{dispatch => {persistent_term, {kraft_dispatch, App}}},
+        env => #{dispatch => {persistent_term, DispatchKey}},
         stream_handlers => [
             kraft_fallback_h,
             cowboy_compress_h,
