@@ -107,30 +107,34 @@ handle_info(Info, _State) ->
 
 %--- Internal ------------------------------------------------------------------
 
-handle(App, Dir, #{path := Path, written := [File]}) ->
-    handle_file(App, Dir, Path, File, written);
-handle(App, Dir, #{path := Path, rename := [File]}) ->
-    handle_file(App, Dir, Path, File, rename);
-handle(App, Dir, #{path := Path, removed := [File]}) ->
-    handle_file(App, Dir, Path, File, removed);
-handle(App, Dir, Event) when map_size(Event) == 0 ->
-    ?LOG_NOTICE(#{monitor => Dir, event => started}, #{kraft_app => App}).
+handle(_App, _Dir, #{path := #{filetype := <<"dir">>}}) ->
+    ok;
+handle(App, Dir, #{path := #{absolute := Path}}) ->
+    handle_file(App, Dir, Path).
 
-handle_file(App, Dir, Path, File, Event) ->
-    Full = filename:join(Path, File),
-    Relative = string:prefix(Full, Dir),
+handle_file(App, Dir, File) ->
+    Relative = string:prefix(File, Dir),
     RootName = filename:rootname(Relative, <<".mustache">>),
     try
-        case filelib:is_regular(Full) of
+        case filelib:is_regular(File) of
             false -> kraft_template:remove(App, RootName);
             true -> kraft_template:reload(App, RootName)
         end
     catch
+        error:{missing_template, App, Path} ->
+            ?LOG_DEBUG(#{
+                app => App,
+                message => "Ignoring unknown template",
+                file => File,
+                path => Path,
+                relative => Relative
+            });
         Class:Reason:ST ->
             ?LOG_ERROR(#{
+                app => App,
                 class => Class,
                 reason => Reason,
-                event => Event,
+                file => File,
                 message => "Could not reload template",
                 stacktrace => ST
             })
@@ -184,32 +188,17 @@ watchexec_start(Dir) ->
 watchexec_cmd(Dir) ->
     [
         "watchexec",
-        " -w " ++ Dir,
-        " --no-vcs-ignore",
+        " --no-discover-ignore",
         " --no-meta",
-        " --",
-        "  echo '" ++ watchexec_line() ++ "'"
+        " --only-emit-events",
+        " --emit-events-to json-stdio",
+        " --watch ",
+        Dir
     ].
 
-watchexec_line() ->
-    "\\\"$WATCHEXEC_COMMON_PATH\\\" "
-    "\\\"$WATCHEXEC_CREATED_PATH\\\" "
-    "\\\"$WATCHEXEC_REMOVED_PATH\\\" "
-    "\\\"$WATCHEXEC_RENAMED_PATH\\\" "
-    "\\\"$WATCHEXEC_WRITTEN_PATH\\\" "
-    "\\\"$WATCHEXEC_OTHERWISE_CHANGED_PATH\\\"".
-
 watchexec_line_event(Line) ->
-    [Path, Created, Removed, Renamed, Written, Other] =
-        [split_paths(Paths) || Paths <- string:lexemes(Line, [$\s])],
-    Attrs = [
-        {path, Path},
-        {created, Created},
-        {removed, Removed},
-        {rename, Renamed},
-        {written, Written},
-        {other, Other}
-    ],
-    maps:from_list([Elem || Elem = {_, Value} <- Attrs, Value =/= []]).
-
-split_paths(Paths) -> string:lexemes(string:trim(Paths, both, "\""), [$:]).
+    #{tags := Tags} = kraft_json:decode(Line),
+    #{
+        binary_to_atom(Kind) => maps:without([Kind], Tag)
+     || #{kind := Kind} = Tag <- Tags
+    }.
