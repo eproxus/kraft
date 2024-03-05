@@ -34,9 +34,7 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
     % (see  https://www.erlang.org/doc/man/gen_server.html#Module:terminate-2)
     process_flag(trap_exit, true),
     % Create routes
-    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
-    AllRoutes = routes(App, [InternalRoutes | maps:get(routes, Params)]),
-    Dispatch = cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]),
+    Dispatch = compile_cowboy(App, maps:get(routes, Params), Opts),
     DispatchKey = {kraft_dispatch, App, make_ref()},
     persistent_term:put(DispatchKey, Dispatch),
 
@@ -78,7 +76,33 @@ terminate(_Reason, ListenerName) ->
 
 %--- Internal ------------------------------------------------------------------
 
+compile_cowboy(App, Routes, #{ssl_opts := SslOpts}) ->
+    case proplists:is_defined(sni_hosts, SslOpts) of
+        true -> compile_cowboy_with_sni(App, Routes);
+        false -> compile_cowboy(App, Routes)
+    end;
+compile_cowboy(App, Routes, _Opts) ->
+    compile_cowboy(App, Routes).
+
+compile_cowboy(App, Routes) ->
+    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
+    AllRoutes = routes(App, [InternalRoutes | Routes]),
+    cowboy_router:compile([{'_', lists:flatten(AllRoutes)}]).
+
+compile_cowboy_with_sni(App, Routes) ->
+    InternalRoutes = {"/kraft", kraft_static, #{app => kraft}},
+    AllRoutes = sni_routes(App, Routes, InternalRoutes),
+    cowboy_router:compile(AllRoutes).
+
 listener_name(App) -> {kraft_listener, App, make_ref()}.
+
+sni_routes(App, Routes, InternalRoutes) ->
+    lists:map(
+        fun({Host, HostRoutes}) ->
+            {Host, routes(App, [InternalRoutes | HostRoutes])}
+        end,
+        Routes
+    ).
 
 routes(App, Routes) ->
     lists:flatmap(
