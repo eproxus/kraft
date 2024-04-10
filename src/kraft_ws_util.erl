@@ -1,5 +1,7 @@
 -module(kraft_ws_util).
 
+-include_lib("kernel/include/logger.hrl").
+
 % API
 -export([setup/4]).
 -export([callbacks/2]).
@@ -79,8 +81,16 @@ websocket_init(#{conn := Conn} = State0) ->
 
 websocket_handle(pong, #{ping := #{}} = State0) ->
     {[], State0};
+websocket_handle({text, _} = Frame, State0) ->
+    module(handle, [Frame], State0);
+websocket_handle(Frame, State0) when
+    element(1, Frame) =:= ping;
+    element(1, Frame) =:= pong
+->
+    {[], State0};
 websocket_handle(Frame, State0) ->
-    module(handle, [Frame], State0).
+    ?LOG_WARNING("Websocket unhandled frame: ~p", [Frame]),
+    {[], State0}.
 
 websocket_info('$kraft_ws_ping', State0) ->
     State1 = trigger_ping(State0),
