@@ -23,7 +23,7 @@
 -export_type([conn/0]).
 
 -type status() :: non_neg_integer() | binary().
--type headers() :: #{atom() => iolist()}.
+-type headers() :: #{binary() => iolist()}.
 -type params() :: kraft_conn:params().
 -type body() :: kraft_json:body_json() | cowboy_req:resp_body().
 -type response() :: kraft_handler:response().

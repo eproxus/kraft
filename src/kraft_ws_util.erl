@@ -47,7 +47,10 @@ handshake(Req, #{handler := Handler, state := MState0} = State0) ->
             Resp = cowboy_req:reply(Code, Headers, Body, Req),
             {ok, Resp, State0};
         {ok, MState1} ->
-            {cowboy_websocket, Req, State0#{state => MState1}}
+            {cowboy_websocket, Req, State0#{state => MState1}};
+        {ok, Headers, MState1} ->
+            Req1 = cowboy_req:set_resp_headers(Headers, Req),
+            {cowboy_websocket, Req1, State0#{state => MState1}}
     end.
 
 call(info, _Args, #{callbacks := #{{info, 2} := false}} = State0) ->
