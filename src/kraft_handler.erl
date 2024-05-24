@@ -12,7 +12,7 @@
 -type body_raw() :: {raw, iodata()} | iodata().
 -type body() ::
     kraft_template:body_template() | kraft_json:body_json() | body_raw().
--type response_body() :: {respond, kraft_conn:conn(), body()}.
+-type response_body() :: {respond, kraft_conn:conn(), body() | kraft:status()}.
 -type response() :: response_body() | kraft_conn:conn().
 
 -callback exec(kraft:conn()) -> response().

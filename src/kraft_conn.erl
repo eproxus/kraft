@@ -21,8 +21,11 @@
 
 -export_type([conn/0]).
 -export_type([params/0]).
+-export_type([path/0]).
+-export_type([status/0]).
 
 -type params() :: cowboy_router:bindings().
+-type status() :: cowboy:http_status().
 
 -type conn() :: #{
     '_type' => module(),
