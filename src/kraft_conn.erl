@@ -57,7 +57,7 @@ path(#{adapter := {Module, Req}} = Conn0) ->
     Path = kraft_util:split_path(Module:path(Req)),
     {Path, mapz:deep_put([request, path], Path, Conn0)}.
 
-params(#{adapter := {Module, Req}} = Conn0) -> {Module:bindings(Req), Conn0}.
+params(Conn0) -> raw(Conn0, bindings).
 
 response(Conn0, Status, Headers, Body) ->
     mapz:deep_merge(Conn0, #{
