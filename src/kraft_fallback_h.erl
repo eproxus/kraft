@@ -11,9 +11,9 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
-init(StreamID, #{method := Method, path := Path} = Req, Opts) ->
+init(StreamID, Req, Opts) ->
     {Commands0, Next0} = cowboy_stream:init(StreamID, Req, Opts),
-    {Commands0, #{next => Next0, method => Method, path => Path}}.
+    {Commands0, #{next => Next0, req => Req}}.
 
 data(StreamID, IsFin, Data, #{next := Next0} = State0) ->
     {Commands0, Next1} = cowboy_stream:data(StreamID, IsFin, Data, Next0),
@@ -41,10 +41,9 @@ insert_fallback({response, 404 = Code, Headers, <<>>}, State) ->
 insert_fallback(Command, _State) ->
     Command.
 
-render(Code, State, Headers) ->
-    % FIXME: Find out a better way to generate a Conn object here
-    Conn0 = kraft_conn:'_set_meta'(kraft_conn:new(fake_req, #{}), app, kraft),
-    Conn1 = kraft_template:response(Conn0, "error.html", context(Code, State)),
+render(Code, #{req := Req}, Headers) ->
+    Conn0 = kraft_conn:'_set_meta'(kraft_conn:new(Req, #{}), app, kraft),
+    Conn1 = kraft_template:response(Conn0, "error.html", context(Code, Conn0)),
     Body = kraft_conn:response_body(Conn1),
     Conn3 = kraft_conn:response_headers(Conn1, Headers#{
         <<"content-length">> => integer_to_binary(iolist_size(Body))
@@ -52,12 +51,12 @@ render(Code, State, Headers) ->
     FinalHeaders = kraft_conn:response_headers(Conn3),
     {response, Code, FinalHeaders, Body}.
 
-context(Code, State) ->
+context(Code, #{method := Method, path := Path}) ->
     #{
         title => kraft_http:status(Code),
         warning => true,
         properties => [
-            #{name => method, value => maps:get(method, State)},
-            #{name => path, value => maps:get(path, State)}
+            #{name => method, value => Method},
+            #{name => path, value => Path}
         ]
     }.
