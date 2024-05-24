@@ -5,6 +5,8 @@
 % Cowboy Handler Callbacks
 -export([init/2]).
 
+-include_lib("kernel/include/logger.hrl").
+
 %--- Types ---------------------------------------------------------------------
 
 -export_type([response/0]).
@@ -28,6 +30,12 @@ init(Req0, #{mod := Mod} = State) ->
             throw:Reply ->
                 response(Conn0, Reply);
             Class:Reason:Stacktrace ->
+                ?LOG_ERROR(#{
+                    message => "Error processing request",
+                    class => Class,
+                    reason => Reason,
+                    stacktrace => Stacktrace
+                }),
                 render_error(500, Conn0, Class, Reason, Stacktrace)
         end,
     Conn2 = kraft_conn:respond(Conn1),
