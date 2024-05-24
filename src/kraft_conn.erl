@@ -59,19 +59,11 @@ new(Req, Meta) ->
         resp => #{body => <<>>, headers => #{}}
     }.
 
-method(#{adapter := {Module, Req}} = Conn0) -> {Module:method(Req), Conn0}.
-
-path(#{request := #{path := Path}} = Conn0) ->
-    {Path, Conn0};
-path(#{adapter := {Module, Req}} = Conn0) ->
-    Path = kraft_util:split_path(Module:path(Req)),
-            Conn0#{body => undefined}
-
-body(#{adapter := {Module, Req}} = Conn0) ->
+await_body(#{adapter := {Module, Req}, meta := #{app := App}} = Conn0) ->
     case Module:has_body(Req) of
         true ->
-            {Body, Req1} = body(Req, Module, <<>>),
-            {Body, Conn0#{apdapter := {Module, Req1}}};
+            {Body, Req1} = await_body(App, Req, Module, <<>>),
+            Conn0#{body => Body, adapter := {Module, Req1}};
         false ->
             Conn0#{body => undefined}
     end.
@@ -140,19 +132,15 @@ respond(#{resp := Resp, adapter := {Module, Req0}} = Conn0) ->
 
 %--- Internal ------------------------------------------------------------------
 
-body(Req0, Module, Acc) ->
-    % TODO = Module:parse_header(<<"content-type">>, Req),
-    case Module:header(<<"content-type">>, Req0) of
-        <<"application/json">> -> ok;
-        <<"application/x-www-form-urlencoded">> -> ok;
-        _ -> throw(415)
-    end,
+await_body(App, Req0, Module, Acc) ->
     case Module:read_body(Req0) of
         {ok, Data, Req1} ->
-            Body = jsx:decode(<<Acc/binary, Data/binary>>),
+            Content = <<Acc/binary, Data/binary>>,
+            ContentType = Module:parse_header(<<"content-type">>, Req0),
+            Body = kraft_content:decode(App, ContentType, Content),
             {Body, Req1};
         {more, Data, Req1} ->
-            body(Req1, Module, <<Acc/binary, Data/binary>>)
+            await_body(App, Req1, Module, <<Acc/binary, Data/binary>>)
     end.
 
 raw(#{adapter := {Module, Req}}, Function) -> apply(Module, Function, [Req]).

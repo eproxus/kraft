@@ -39,6 +39,9 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
     DispatchKey = {kraft_dispatch, App, make_ref()},
     persistent_term:put(DispatchKey, Dispatch),
 
+    % Content Handlers
+    kraft_content:init_handlers(App),
+
     % Start Cowboy
     ListenerName = listener_name(App),
     ProtocolOpts = #{
