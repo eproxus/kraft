@@ -1,6 +1,5 @@
 {
   "name": "kraft-blog-styles",
-  "packageManager": "yarn@3.1.1",
   "devDependencies": {
     "autoprefixer": "latest",
     "postcss": "latest",
