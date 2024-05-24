@@ -12,9 +12,8 @@ jobs:
     strategy:
       matrix:
         otp:
-          - 24
-          - 25
           - 26
+          - 27
         rebar3: ['3']
     steps:
 
