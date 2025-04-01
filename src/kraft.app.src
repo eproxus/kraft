@@ -1,6 +1,6 @@
 {application, kraft, [
     {description, "TBD"},
-    {vsn, "0.1.0"},
+    {vsn, semver},
     {registered, []},
     {mod, {kraft_app, []}},
     {applications, [
