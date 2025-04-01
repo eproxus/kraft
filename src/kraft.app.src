@@ -25,7 +25,7 @@
     ]},
     {modules, []},
 
-    {licenses, ["Apache 2.0"]},
+    {licenses, ["Apache-2.0"]},
     {links, []},
     {exclude_files, [
         "examples",
