@@ -1,5 +1,6 @@
 [tools]
 erlang = "27.3.2"
+rebar = "3.24.0"
 
 [tasks.changelog]
 description = "Update the changelog"
