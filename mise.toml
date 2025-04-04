@@ -1,0 +1,6 @@
+[tools]
+erlang = "27.3.2"
+
+[tasks.changelog]
+description = "Update the changelog"
+run = 'git-cliff --include-path "src" --include-path "rebar.lock"'
