@@ -75,8 +75,10 @@ handle_call(Request, From, _State) -> error({unknown_request, Request, From}).
 
 handle_cast(Request, _State) -> error({unknown_cast, Request}).
 
-% TODO: Handler owner/Cowboy crashes here
-handle_info(Info, _State) -> error({unknown_info, Info}).
+handle_info({'EXIT', _Pid, _Reason}, State) ->
+    {noreply, State};
+handle_info(Info, _State) ->
+    error({unknown_info, Info}).
 
 terminate(_Reason, #{listener := ListenerName, dispatch := DispatchKey}) ->
     cowboy:stop_listener(ListenerName),
