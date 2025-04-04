@@ -52,7 +52,7 @@ decode(Binary) ->
         _Other ->
             {single, {internal_error, invalid_request, id(_Other)}}
     catch
-        error:badarg ->
+        error:{json, _JSON, _Reason} ->
             {single, {internal_error, parse_error, null}}
     end.
 

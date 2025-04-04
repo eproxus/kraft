@@ -101,7 +101,7 @@ init() ->
      || {State, Text} <- [
             {checked, <<"Implement TODO app">>},
             {unchecked, <<"Buy milk">>},
-            {unchecked, <<"Call the president">>}
+            {unchecked, <<"Oust the president">>}
         ]
     ],
     ok.

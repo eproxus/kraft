@@ -9,7 +9,6 @@
         cowboy,
         cowlib,
         bbmustache,
-        jsx,
         mapz
     ]},
     {env, [

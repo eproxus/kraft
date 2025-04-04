@@ -90,15 +90,8 @@ error_reply(method_not_found, ID) ->
     kraft_jsonrpc:format_error({internal_error, method_not_found, ID}).
 
 unpack({call, Method, Params, ID}) ->
-    {call, attempt_atom(Method), Params, ID};
+    {call, kraft_util:attempt_atom(Method), Params, ID};
 unpack({notification, Method, Params}) ->
-    {notification, attempt_atom(Method), Params};
+    {notification, kraft_util:attempt_atom(Method), Params};
 unpack(Message) ->
     Message.
-
-attempt_atom(Binary) when is_binary(Binary) ->
-    try
-        binary_to_existing_atom(Binary)
-    catch
-        error:badarg -> Binary
-    end.

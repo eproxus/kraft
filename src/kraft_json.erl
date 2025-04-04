@@ -2,8 +2,6 @@
 
 % API
 -export([decode/1]).
--ignore_xref([{?MODULE, decode_stream, 1}]).
--export([decode_stream/1]).
 -export([encode/1]).
 -export([response/2]).
 
@@ -11,24 +9,32 @@
 
 -export_type([body_json/0]).
 
--type body_json() :: {json, jsx:json_term()}.
+-type body_json() :: {json, json:encode_value()}.
 
 %--- API -----------------------------------------------------------------------
 
-decode(Binary) -> jsx:decode(Binary, [{labels, attempt_atom}]).
+decode(Binary) ->
+    try json:decode(Binary, ok, #{object_push => fun object_push/3}) of
+        {Result, ok, <<>>} -> Result;
+        Result -> error({json, Binary, {unexpected_result, Result}})
+    catch
+        error:{invalid_byte, _} = Reason ->
+            error({json, Binary, Reason});
+        error:{unexpected_sequence, _} = Reason ->
+            error({json, Binary, Reason});
+        error:unexpected_end = Reason ->
+            error({json, Binary, Reason})
+    end.
 
-% decode_content(<<"application">>, <<"json">>, _Params, Value) ->
-%     decode(Value).
-
-% encode_content(JSON) -> {encode(JSON), <<"application/json; charset=utf8">>}.
-
-decode_stream(Binary) ->
-    jsx:decode(Binary, [{labels, attempt_atom}, stream, return_tail]).
-
-encode(Term) -> jsx:encode(Term).
+encode(Term) -> json:encode(Term).
 
 response(Conn0, Body) ->
     Conn1 = kraft_conn:response_headers(Conn0, #{
         <<"content-type">> => <<"application/json; charset=utf8">>
     }),
     kraft_conn:response_body(Conn1, encode(Body)).
+
+%--- Internal ————————————------------------------------------------------------
+
+object_push(Key, Value, Acc) ->
+    [{kraft_util:attempt_atom(Key), Value} | Acc].
