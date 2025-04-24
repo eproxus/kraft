@@ -43,7 +43,15 @@ insert_fallback(Command, _State) ->
 
 render(Code, #{req := Req}, Headers) ->
     Conn0 = kraft_conn:'_set_meta'(kraft_conn:new(Req, #{}), app, kraft),
-    Conn1 = kraft_template:response(Conn0, "error.html", context(Code, Conn0)),
+    Conn1 =
+        case kraft_conn:is_browser(Conn0) of
+            true ->
+                kraft_template:response(
+                    Conn0, "error.html", context(Code, Conn0)
+                );
+            false ->
+                Conn0
+        end,
     Body = kraft_conn:response_body(Conn1),
     Conn3 = kraft_conn:response_headers(Conn1, Headers#{
         <<"content-length">> => integer_to_binary(iolist_size(Body))

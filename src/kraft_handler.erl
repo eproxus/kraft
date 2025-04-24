@@ -47,6 +47,8 @@ init(Req0, #{mod := Mod} = State) ->
 handle({respond, Conn0, Response}) -> response(Conn0, Response);
 handle(Conn0) -> Conn0.
 
+%--- Internal ------------------------------------------------------------------
+
 % FIXME: Validate response tuple types inside kraft_conn?
 response(Conn0, {template, _, _} = Body) ->
     response(Conn0, {200, #{}, Body});
@@ -67,28 +69,34 @@ response(Conn0, Status) when is_integer(Status) ->
 response(_Conn0, Reply) ->
     error({invalid_reply, Reply}).
 
-%--- Internal ------------------------------------------------------------------
-
 render_error(Status, Conn0, Class, Reason, Stacktrace) ->
-    {Template, Properties, ExtraContext} = render_error(Class, Reason),
-    ReasonString = io_lib:format("~p", [Reason]),
-    Context = ExtraContext#{
-        title => kraft_http:status(Status),
-        message => message(Class, Reason, Stacktrace),
-        properties => [
-            #{name => method, value => maps:get(method, Conn0)},
-            #{name => path, value => maps:get(path, Conn0)},
-            #{name => app, value => kraft_conn:'_meta'(Conn0, app)},
-            #{name => class, value => Class},
-            #{name => reason, value => ReasonString}
-        ] ++ Properties,
-        class => Class,
-        reason => ReasonString,
-        stacktrace => stack_trace(Stacktrace)
-    },
-    Conn1 = kraft_template:response(
-        kraft_conn:'_set_meta'(Conn0, app, kraft), Template, Context
-    ),
+    Conn1 =
+        case kraft_conn:is_browser(Conn0) of
+            true ->
+                {Template, Properties, ExtraContext} = render_error(
+                    Class, Reason
+                ),
+                ReasonString = io_lib:format("~p", [Reason]),
+                Context = ExtraContext#{
+                    title => kraft_http:status(Status),
+                    message => message(Class, Reason, Stacktrace),
+                    properties => [
+                        #{name => method, value => maps:get(method, Conn0)},
+                        #{name => path, value => maps:get(path, Conn0)},
+                        #{name => app, value => kraft_conn:'_meta'(Conn0, app)},
+                        #{name => class, value => Class},
+                        #{name => reason, value => ReasonString}
+                    ] ++ Properties,
+                    class => Class,
+                    reason => ReasonString,
+                    stacktrace => stack_trace(Stacktrace)
+                },
+                kraft_template:response(
+                    kraft_conn:'_set_meta'(Conn0, app, kraft), Template, Context
+                );
+            false ->
+                Conn0
+        end,
     kraft_conn:response_status(Conn1, Status).
 
 render_error(error, {missing_template, _App, Path}) ->
@@ -105,7 +113,12 @@ message(Class, Reason, [Call | _]) ->
     Message.
 
 stack_trace(Stacktrace) ->
-    #{stack => #{items => lists:map(fun stack_call/1, Stacktrace)}}.
+    #{stack => #{items => stack_calls(Stacktrace, [])}}.
+
+stack_calls([Call], Acc) ->
+    lists:reverse([maps:put(last, true, stack_call(Call)) | Acc]);
+stack_calls([Call | Stacktrace], Acc) ->
+    stack_calls(Stacktrace, [stack_call(Call) | Acc]).
 
 stack_call({M, F, A, Attrs}) ->
     Call = #{module => M, func => F},

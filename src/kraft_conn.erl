@@ -11,6 +11,7 @@
 -export([response_body/1]).
 -export([response_body/2]).
 -export([respond/1]).
+-export([is_browser/1]).
 -export(['_meta'/1]).
 -export(['_meta'/2]).
 -export(['_set_meta'/3]).
@@ -115,6 +116,12 @@ respond(#{resp := Resp, adapter := {Module, Req0}} = Conn0) ->
             });
         _ ->
             error(status_code_not_set)
+    end.
+
+is_browser(#{headers := Headers}) ->
+    case maps:find(~"user-agent", Headers) of
+        {ok, <<"Mozilla/5.0", _/binary>>} -> true;
+        _ -> false
     end.
 
 -spec '_meta'(conn()) -> conn().
