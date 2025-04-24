@@ -21,15 +21,18 @@ exec(Conn0) ->
 handle(#{method := Method} = Conn0, Module, Route) ->
     Conn1 = kraft_conn:await_body(Conn0),
     Prefix = kraft_util:split_path(Route),
+    Function = method(Method),
     try
-        apply(Module, method(Method), [
+        apply(Module, Function, [
             prefix(maps:get(path, Conn1), Prefix), Conn1
         ])
     catch
         error:undef:StackTrace ->
-            return_error_code(undef, Module, Method, StackTrace, 405);
+            return_error_code(undef, Module, Function, StackTrace, 405);
         error:function_clause:StackTrace ->
-            return_error_code(function_clause, Module, Method, StackTrace, 404)
+            return_error_code(
+                function_clause, Module, Function, StackTrace, 404
+            )
     end.
 
 return_error_code(Type, Module, Method, StackTrace, Code) ->
