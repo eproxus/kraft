@@ -10,19 +10,19 @@ and this project adheres to
 
 ### Changed
 
-- Only render HTML errors for browsers
-- Replace jsx with OTP json module
+- *(error)* Only render HTML errors for browsers
+- *(json)* Replace jsx with OTP json module
   - **BREAKING**: Kraft is now incompatible with OTP 26.0 or earlier.
 
 ### Fixed
 
-- Correctly generate 4XX responses
+- *(kraft_rest)* Correctly generate 4XX responses
 
 ## [0.2.0] - 2025-04-01
 
 ### Changed
 
-- Update Cowboy and its dependencies
+- *(deps)* Update Cowboy and its dependencies
 
 [unreleased]: https://github.com///compare/v0.2.0..HEAD
 
