@@ -1,8 +1,0 @@
-{
-  "name": "kraft-blog-styles",
-  "devDependencies": {
-    "autoprefixer": "latest",
-    "postcss": "latest",
-    "tailwindcss": "latest"
-  }
-}

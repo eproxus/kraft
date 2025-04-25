@@ -1,34 +1,28 @@
-TEMPLATES = $(shell find ../web/templates -type f -name '*.html.mustache')
-HTML = $(shell find ../web/static -type f -name '*.html' 2>/dev/null)
-STATIC = Makefile tailwind.config.js bun.lockdb
+CSS_ROOT = ../web/static/assets
 
-CSS_ROOT = ../web/static/assets/styles
+CSS_IN := $(firstword $(wildcard *.css))
+CSS_OUT := $(patsubst %.css,$(CSS_ROOT)/%.css,$(CSS_IN))
 
-CSS_IN = kraft.css
-CSS_OUT = $(CSS_ROOT)/$(CSS_IN)
+TAILWINDCSS = tailwindcss
 
-all: help
+ifeq (, $(shell which $(TAILWINDCSS)))
+$(error "No 'tailwindcss' in PATH")
+endif
 
 .PHONY: css
-css: $(CSS_OUT) ## Build CSS
+css: $(CSS_OUT) ## Build the main CSS file
 	@echo -n
 
-.PHONY: watch
-watch: css ## Watch HTML and continuously re-build CSS
-	@bun x tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --minify --watch
-
-$(CSS_OUT): $(CSS_IN) $(CSS_ROOT) $(TEMPLATES) $(HTML) $(STATIC)
-	@bun x tailwindcss -i $< -o $@ --minify
+# Rule to build the main CSS file from its source
+$(CSS_OUT): $(CSS_IN) $(CSS_ROOT)
+	@$(TAILWINDCSS) -i $(CSS_IN) -o $(CSS_OUT) --minify
 
 $(CSS_ROOT):
 	@mkdir -p $@
 
-.PHONY: upgrade
-upgrade: css ## Upgrade Tailwind
-	@bun update
-
-bun.lockdb: package.json
-	@bun install
+.PHONY: watch
+watch: $(CSS_ROOT) ## Watch sources and continuously re-build CSS using watchexec
+	@$(TAILWINDCSS) -i $(CSS_IN) -o $(CSS_OUT) --minify --watch
 
 .PHONY: help
 help: ## Show this help message
