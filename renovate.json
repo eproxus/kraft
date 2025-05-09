@@ -5,8 +5,8 @@
         {
             "fileMatch": ["(^|/)rebar\\.config$"],
             "matchStrings": [
-                "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\"(?<currentValue>(?:~>\\s*)?[0-9a-zA-Z0-9_.-]+)\"(?:\\s*,\\s*\\{pkg,\\s*[a-z][a-zA-Z0-9_@']*\\s*\\})?\\s*\\}",
-                "(?<!\\{\\s*)\\\\b(?<depName>[a-z][a-zA-Z0-9_@']*)\\\\b\\s*(?=[,]])"
+                "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\"(?<currentValue>(?:~>\\s*)?[0-9a-zA-Z0-9_.-]+)\"(?:\\s*,\\s*\\{pkg,\\s*[a-z][a-zA-Z0-9_@']*\\})?\\s*\\}",
+                "\\\\b(?<depName>[a-z][a-zA-Z0-9_@']*)\\\\b\\s*(?=[,]])"
             ],
             "matchStringsStrategy": "any",
             "depNameTemplate": "{{depName}}",
