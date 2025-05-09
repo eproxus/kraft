@@ -1,27 +1,25 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": ["config:recommended"],
-    "regexManagers": [
+    "customManagers": [
         {
-            "managerName": "rebar3-hex",
             "fileMatch": ["(^|/)rebar\\.config$"],
             "matchStrings": [
                 "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\"(?<currentValue>(?:~>\\s*)?[0-9a-zA-Z0-9_.-]+)\"(?:\\s*,\\s*\\{pkg,\\s*[a-z][a-zA-Z0-9_@']*\\s*\\})?\\s*\\}",
                 "(?<!\\{\\s*)\\\\b(?<depName>[a-z][a-zA-Z0-9_@']*)\\\\b\\s*(?=[,]])"
             ],
-            "matchStringsStrategy": "file",
+            "matchStringsStrategy": "any",
             "depNameTemplate": "{{depName}}",
             "currentValueTemplate": "{{currentValue}}",
             "datasourceTemplate": "hex",
             "versioningTemplate": "semver"
         },
         {
-            "managerName": "rebar3-git",
             "fileMatch": ["(^|/)rebar\\.config$"],
             "matchStrings": [
                 "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\\{\\s*(?<depType>git|git_subdir)\\s*,\\s*\"(?<packageName>[^\"]+)\"\\s*,\\s*(?:(?:\\{(?:branch|ref)\\s*,\\s*\"[^\"]+\"\\s*\\})|(?:\\{tag\\s*,\\s*\"(?<currentValue>[^\"\\s]+)\"\\s*\\}))(?:\\s*,\\s*\"[^\"]*\")?(?:\\s*,\\s*\\{[^}]*\\})*\\s*\\}\\s*\\}"
             ],
-            "matchStringsStrategy": "file",
+            "matchStringsStrategy": "any",
             "depNameTemplate": "{{depName}}",
             "packageNameTemplate": "{{packageName}}",
             "currentValueTemplate": "{{currentValue}}",
