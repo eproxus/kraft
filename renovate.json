@@ -3,11 +3,12 @@
     "extends": ["config:recommended"],
     "customManagers": [
         {
+            "customType": "regex",
             "fileMatch": ["(^|/)rebar\\.config$"],
             "matchStrings": [
                 "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\"(?<currentValue>(?:~>\\s*)?[0-9a-zA-Z0-9_.-]+)\"(?:\\s*,\\s*\\{pkg,\\s*[a-z][a-zA-Z0-9_@']*\\})?\\s*\\}",
-                "\\\\b(?<depName>[a-z][a-zA-Z0-9_@']*)\\\\b\\s*(?=,)",
-                "\\\\b(?<depName>[a-z][a-zA-Z0-9_@']*)\\\\b\\s*(?=])"
+                "\\b(?<depName>[a-z][a-zA-Z0-9_@\\']*)\\b\\s*\\]\\]",
+                "\\b(?<depName>[a-z][a-zA-Z0-9_@\\']*)\\b\\s*\\]"
             ],
             "matchStringsStrategy": "any",
             "depNameTemplate": "{{depName}}",
@@ -16,9 +17,10 @@
             "versioningTemplate": "semver"
         },
         {
+            "customType": "regex",
             "fileMatch": ["(^|/)rebar\\.config$"],
             "matchStrings": [
-                "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\\{\\s*(?<depType>git|git_subdir)\\s*,\\s*\"(?<packageName>[^\"]+)\"\\s*,\\s*(?:(?:\\{(?:branch|ref)\\s*,\\s*\"[^\"]+\"\\s*\\})|(?:\\{tag\\s*,\\s*\"(?<currentValue>[^\"\\s]+)\"\\s*\\}))(?:\\s*,\\s*\"[^\"]*\")?(?:\\s*,\\s*\\{[^}]*\\})*\\s*\\}\\s*\\}"
+                "\\{\\s*(?<depName>[a-z][a-zA-Z0-9_@']*)\\s*,\\s*\\{\\s*(?<depType>git|git_subdir)\\s*,\\s*\"(?<packageName>[^\"]+)\"\\s*,(?:(?:\\{(?:branch|ref)\\s*,\\\"[^\\\"]+\\\"\\})|(?:\\{tag\\s*,\\\"(?<currentValue>[^\\\"\\s]+)\\\"\\}))(?:\\s*,\\\"[^\\\"]*\\\")?(?:\\s*,\\{[^\\}]*\\})*\\s*\\}\\s*\\}"
             ],
             "matchStringsStrategy": "any",
             "depNameTemplate": "{{depName}}",
