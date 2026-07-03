@@ -5,3 +5,39 @@ rebar = "3.24.0"
 [tasks.changelog]
 description = "Update the changelog"
 run = 'git-cliff --include-path "src" --include-path "rebar.lock"'
+
+[tasks."verify:rebar:compile"]
+description = "Compile with rebar3"
+run = "rebar3 compile"
+
+[tasks."verify:rebar:fmt"]
+description = "Check code formatting"
+wait_for = ["verify:rebar:compile"]
+run = "rebar3 fmt --check"
+
+[tasks."verify:rebar:xref"]
+description = "Run xref checks"
+wait_for = ["verify:rebar:fmt"]
+run = "rebar3 xref"
+
+[tasks."verify:rebar:dialyzer"]
+description = "Run dialyzer"
+wait_for = ["verify:rebar:xref"]
+run = "rebar3 dialyzer"
+
+[tasks."verify:rebar"]
+description = "Run rebar3 verification checks"
+depends = [
+  "verify:rebar:compile",
+  "verify:rebar:fmt",
+  "verify:rebar:xref",
+  "verify:rebar:dialyzer",
+]
+
+[tasks.verify]
+description = "Run all verification checks"
+depends = ["verify:rebar"]
+
+[tasks.test]
+description = "Run all tests"
+run = "rebar3 do eunit, ct"

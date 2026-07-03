@@ -1,27 +1,22 @@
 name: Continuous Integration
 
 on:
-  - push
-  - pull_request
-  - workflow_dispatch
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    name: Erlang ${{matrix.otp}} / rebar ${{matrix.rebar3}}
-    strategy:
-      matrix:
-        otp:
-          - 27
-        rebar3: ['3']
+
     steps:
 
       - uses: actions/checkout@v4
 
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          rebar3-version: ${{matrix.rebar3}}
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
 
       - uses: actions/cache@v4
         env:
@@ -30,10 +25,9 @@ jobs:
           path: |
             ~/.cache/rebar3
             _build
-          key: ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}-${{hashFiles('rebar.lock')}}
+          key: ci-${{runner.os}}-${{env.cache-name}}-${{hashFiles('mise.toml', 'rebar.lock')}}
           restore-keys: |
-            ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}-rebar_${{matrix.rebar3}}
-            ci-${{runner.os}}-${{env.cache-name}}-otp_${{matrix.otp}}
+            ci-${{runner.os}}-${{env.cache-name}}
 
       - uses: actions/cache@v4
         env:
@@ -43,14 +37,8 @@ jobs:
             priv/styles/node_modules
           key: ci-${{runner.os}}-${{env.cache-name}}-${{hashFiles('priv/styles/yarn.lock')}}
 
-      - name: Compile
-        run: rebar3 do clean, compile
-
-      - name: Check
-        run: rebar3 fmt --check
-
-      - name: Analyze
-        run: rebar3 do xref, dialyzer
+      - name: Verify
+        run: mise run --output=keep-order verify
 
       - name: Test
-        run: rebar3 do eunit, ct
+        run: mise run --output=keep-order test
