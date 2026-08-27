@@ -1,5 +1,5 @@
 [tools]
-erlang = "29.0.3"
+erlang = "29.0.5"
 rebar = "3.27.0"
 
 [tasks.changelog]
