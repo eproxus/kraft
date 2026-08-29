@@ -1,0 +1,18 @@
+{application, rest_with_telemetry, [
+    {description, "A REST API example in Kraft"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {rest_with_telemetry, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        telemetry,
+        cowboy_telemetry,
+        kraft
+    ]},
+    {env, []},
+    {modules, []},
+
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.

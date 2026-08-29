@@ -44,13 +44,16 @@ init(#{app := App, owner := Owner, opts := #{port := Port} = Opts} = Params) ->
 
     % Start Cowboy
     ListenerName = listener_name(App),
+    BasicHandlers = [
+        kraft_fallback_h,
+        cowboy_compress_h,
+        cowboy_stream_h
+    ],
+    OptsHandlers = maps:get(stream_handlers, Opts, []),
+    Handlers = lists:uniq(OptsHandlers ++ BasicHandlers),
     ProtocolOpts = #{
         env => #{dispatch => {persistent_term, DispatchKey}},
-        stream_handlers => [
-            kraft_fallback_h,
-            cowboy_compress_h,
-            cowboy_stream_h
-        ]
+        stream_handlers => Handlers
     },
     {ok, Listener} =
         case Opts of

@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <title>Kraft REST API with Telemetry</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="/assets/scripts/htmx@1.4.1.min.js"></script>
+  <script src="/assets/scripts/htmx@1.4.1/ext/client-side-templates.js"></script>
+  <script src="/assets/scripts/mustache@4.2.0.min.js"></script>
+
+</head>
+<body style="margin: 0; padding: 0;">
+
+
+  <h1>Kraft REST API with Telemetry</h1>
+
+  <div style="text-align: left; margin-bottom: 30px;">
+    <a href="/telemetry.html" style="background-color: #007bff; color: white; margin: 10px; padding: 10px 20px;">
+      Telemetry Dashboard
+    </a>
+  </div>
+
+  <div style="text-align: center; " hx-ext="client-side-templates">
+    <h2>API Testing</h2>
+    
+    <button hx-get="/api/v1/example/endpoint" hx-target="#content" mustache-template="content-template" >
+      Click Me (Get request)
+    </button>
+
+    <button hx-get="/api/v1/error">
+      Click Me (Generate an error for telemetry)
+    </button>
+
+    <div id="content"></div>
+
+    <template id="content-template">
+      <div style="text-align: left; margin-left: 20px;">
+        <h3>Response</h3>
+          <dl>
+            <dt>User</dt>
+            <dd>{{user}}</dd>
+      
+            <dt>ID</dt>
+            <dd>{{id}}</dd>
+      
+            <dt>Role</dt>
+            <dd>{{role}}</dd>
+      
+            <dt>Last Accessed</dt>
+            <dd>{{access}}</dd>
+          </dl>
+      </div>
+    </template>
+  </div>
+
+</body>
+</html>

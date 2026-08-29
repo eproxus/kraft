@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Telemetry</title>
+  <script src="/assets/scripts/htmx@1.4.1.min.js"></script>
+  <script src="/assets/scripts/htmx@1.4.1/ext/client-side-templates.js"></script>
+  <script src="/assets/scripts/mustache@4.2.0.min.js"></script>
+</head>
+<body>
+  <h1>Kraft REST API with Telemetry</h1>
+
+  <a href="/"> &lt; Back to main page</a>
+
+  <div hx-ext="client-side-templates" style="padding: 10px 10px 10px 0;">
+    <button id="clear-btn"
+            hx-delete="/api/v1/telemetry/events"
+            hx-swap="none"
+            hx-confirm="Are you sure you want to clear all events?">
+      Clear All Events
+    </button>
+
+    <script>
+      document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.elt.id === 'clear-btn') {
+          document.getElementById('refresh-btn').click();
+        }
+      });
+    </script>
+
+    <button id="refresh-btn"
+            hx-get="/api/v1/telemetry/events"
+            hx-target="#events"
+            mustache-template="events-template">
+      Refresh Events
+    </button>
+
+    <div id="events"></div>
+
+    <template id="events-template">
+      <h2>Events ({{count}})</h2>
+      <p>Last updated: {{timestamp}}</p>
+
+      {{#events}}
+      <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px;">
+        <p><strong>Request ID (Connection PID + Stream ID):</strong> {{request_id}}</p>
+        <p><strong>Type:</strong> {{event_type}}</p>
+        <p><strong>Path:</strong> {{method}} {{path}}</p>
+        
+        {{#measurements}}
+        <div style="margin-top: 10px; padding: 5px; background-color: #f5f5f5;">
+          <strong>Measurements:</strong>
+          {{#duration}}
+          <p>&bull; <strong>Duration:</strong> {{duration}}&micro;s</p>
+          {{/duration}}
+          {{#resp_body_length}}
+          <p>&bull; <strong>Response Size:</strong> {{resp_body_length}} bytes</p>
+          {{/resp_body_length}}
+        </div>
+        {{/measurements}}
+        
+        {{#meta}}
+        <div style="margin-top: 10px; padding: 5px; background-color: #f0f8ff; border-left: 3px solid #007acc;">
+          <strong>Meta (Raw Telemetry Data):</strong>
+          <pre style="white-space: pre-wrap; word-wrap: break-word; font-size: 12px; background-color: #f9f9f9; padding: 5px; margin: 5px 0;">
+            {{meta}}
+          </pre>
+        </div>
+        {{/meta}}
+        
+        </div>
+      {{/events}}
+
+      {{^events}}
+      <p>No events captured yet.</p>
+      <p>Go to <a href="/">main page</a> and click "Click Me" to generate events.</p>
+      {{/events}}
+    </template>
+  </div>
+</body>
+</html>

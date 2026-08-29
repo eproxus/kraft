@@ -106,7 +106,7 @@ respond(#{resp := Resp, adapter := {Module, Req0}} = Conn0) ->
                     method => maps:get(method, Conn0),
                     path => maps:get(path, Conn0),
                     status => Status,
-                    size => byte_size(Body)
+                    size => iolist_size(Body)
                 },
                 #{kraft_app => '_meta'(Conn0, app)}
             ),
