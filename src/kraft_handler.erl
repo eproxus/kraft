@@ -1,5 +1,96 @@
 -module(kraft_handler).
 
+-moduledoc """
+The base module that defines the fundamental behavior for all HTTP request
+handlers in the Kraft web framework. 
+
+It implements the Cowboy handler behaviour, serving as the core abstraction
+layer that translates HTTP requests into application logic calls, processes
+responses, and handles errors with comprehensive logging and user-friendly
+error pages.
+
+## Usage
+
+```erlang
+-module(my_handler).
+-behaviour(kraft_handler).
+
+-export([exec/1]).
+
+exec(Conn) ->
+    {respond, Conn, {template, "index.html", #{message => "Hello!"}}}.
+```
+
+## Handler Types
+
+**HTTP Request Handler Behaviors**
+
+```erlang
+kraft_handler (base)
+├── kraft_controller (templates)
+└── kraft_rest (REST APIs) 
+```
+
+**WebSocket Handler**
+
+They don't implement `kraft_handler` behaviour, but they use `m:kraft_ws_util`
+internally which implements the `m:cowboy_websocket` behaviour.
+
+```erlang
+kraft_ws_util (base)
+├──kraft_ws (Raw)
+├──kraft_ws_json (JSON)
+└──kraft_ws_jsonrpc (JSON-RPC 2.0) 
+```
+
+## Response Types
+
+- Template Response: `{respond, Conn, {template, "page.html", #{title => "Hello"}}}`
+- JSON Response: `{respond, Conn, {json, #{message => "Success", data => [1, 2, 3]}}}`
+- HTML Response: `{respond, Conn, {html, "<h1>Welcome to Kraft</h1>"}}`
+- File Response: `{respond, Conn, {file, "document.pdf"}}`
+- Redirect Response: `{respond, Conn, {redirect, "/new-location"}}`
+- Status Response: `{respond, Conn, {status, 404, "Not Found"}}`
+- Custom Response: `{respond, Conn, {200, #{<<"X-Custom">> => <<"Value">>}, "Custom content"}}`
+- Connection Object Response: `{respond, Conn, {201, #{}, {json, #{id => 123, status => "created"}}}}`
+
+## Error Handling
+
+### Automatic Error Handling
+```erlang
+exec(Conn) ->
+    % Kraft automatically catches exceptions and renders error pages
+    risky_operation(),
+    {respond, Conn, {json, #{success => true}}}.
+```
+
+### Manual Error Handling
+```erlang
+exec(Conn) ->
+    try
+        Result = risky_operation(),
+        {respond, Conn, {json, Result}}
+    catch
+        error:not_found ->
+            {respond, Conn, {status, 404, "Resource not found"}};
+        error:unauthorized ->
+            {respond, Conn, {status, 401, "Unauthorized"}};
+        _:Reason ->
+            {respond, Conn, {status, 500, "Internal server error"}}
+    end.
+```
+
+## See Also
+
+- `m:kraft_controller` - Controller handler module
+- `m:kraft_rest` - REST handler module
+- `m:kraft_ws_json` - JSON WebSocket handler module
+- `m:kraft_ws_jsonrpc` - JSON-RPC 2.0 WebSocket handler module
+- `m:kraft_ws` - Raw WebSocket handler module
+- `m:kraft_ws_util` - Base WebSocket handler module
+
+""".
+
 -behaviour(cowboy_handler).
 
 % Cowboy Handler Callbacks
@@ -20,6 +111,16 @@
 -callback exec(kraft:conn()) -> response().
 
 %--- Cowboy Handler Callbacks --------------------------------------------------
+
+-doc """
+Initializes the Cowboy handler and processes the request.
+
+This function is called by Cowboy for each incoming request. It:
+1. Creates a Kraft connection object
+2. Calls the user's `exec/1` function
+3. Handles any errors that occur
+4. Builds and sends the response
+""".
 
 init(Req0, #{mod := Mod} = State) ->
     Conn0 = kraft_conn:new(Req0, State),

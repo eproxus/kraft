@@ -1,9 +1,11 @@
-%%%-------------------------------------------------------------------
-%% @doc kraft public API
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(kraft_app).
+
+-moduledoc """
+Kraft public API.
+
+This module is the entry point for the Kraft application. It starts the
+supervisor and stops the application.
+""".
 
 -behaviour(application).
 

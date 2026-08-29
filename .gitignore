@@ -28,3 +28,6 @@ examples/blog/rebar.lock
 
 # macOS
 .DS_Store
+
+# Docs
+doc/
