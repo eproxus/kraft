@@ -1,12 +1,26 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:best-practices", "group:all"],
+    "extends": ["config:best-practices"],
     "minimumReleaseAge": "14 days",
+    "gitIgnoredAuthors": [
+        "41898282+github-actions[bot]@users.noreply.github.com"
+    ],
     "packageRules": [
         {
-            "matchUpdateTypes": ["minor", "patch"],
+            "matchUpdateTypes": ["minor", "patch", "digest"],
             "automerge": true,
-            "automergeType": "pr"
+            "automergeType": "pr",
+            "automergeStrategy": "squash",
+            "platformAutomerge": false
+        },
+        {
+            "description": "Digests have no release timestamp",
+            "matchUpdateTypes": ["digest"],
+            "minimumReleaseAge": null
+        },
+        {
+            "matchPackageNames": ["cowboy", "cowlib"],
+            "groupName": "cowboy"
         }
     ],
     "customManagers": [
