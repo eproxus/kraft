@@ -2,6 +2,11 @@
 
 An minimalistic Erlang web framework.
 
+## Requirements
+
+* Erlang/OTP 27.0 or later
+* rebar3 3.26.0 or later
+
 ## Examples
 
 Start an example shell:
