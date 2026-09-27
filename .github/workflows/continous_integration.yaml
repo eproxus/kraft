@@ -9,7 +9,46 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  lock:
+    # Only Renovate's own commits on its branches
+    if: github.actor == 'renovate[bot]' && startsWith(github.ref, 'refs/heads/renovate/')
+    runs-on: ubuntu-latest
+
+    outputs:
+      pushed: ${{steps.commit.outputs.pushed}}
+
+    steps:
+
+      # A deploy key push triggers CI on the lock commit
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ssh-key: ${{secrets.RENOVATE_LOCK_DEPLOY_KEY}}
+
+      - uses: jdx/mise-action@dad1bfd3df957f44999b559dd69dc1671cb4e9ea # v4.2.1
+
+      - name: Update rebar.lock
+        run: rebar3 update && rebar3 upgrade --all
+
+      - name: Commit rebar.lock
+        id: commit
+        run: |
+          git add rebar.lock
+          if git diff --cached --quiet; then
+            echo 'pushed=false' >> "$GITHUB_OUTPUT"
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'chore(deps): Update rebar.lock'
+            git push
+            echo 'pushed=true' >> "$GITHUB_OUTPUT"
+          fi
+
   ci:
+    needs: lock
+    # Run when lock was skipped or had nothing to push. After a lock push, CI
+    # runs on the lock commit instead. !cancelled() keeps a skipped lock from
+    # skipping this job.
+    if: ${{!cancelled() && (needs.lock.result == 'skipped' || needs.lock.outputs.pushed == 'false')}}
     runs-on: ubuntu-latest
 
     steps:
