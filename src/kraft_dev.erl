@@ -2,6 +2,57 @@
 
 -behavior(gen_server).
 
+-moduledoc """
+Development mode utilities for Kraft framework.
+
+## Features
+
+* **Template Hot Reloading**: Automatically reload templates when files change
+* **File System Monitoring**: Uses `watchexec` for efficient file watching
+* **Dependency Tracking**: Reloads dependent templates when partials change
+* **Development Mode Detection**: Automatically enabled in development environments
+* **Error Handling**: Graceful handling of file system errors and missing files
+
+## Requirements
+
+The `watchexec` command-line tool must be installed for hot-reloading to work:
+
+```bash
+# macOS
+brew install watchexec
+
+# Ubuntu/Debian
+sudo apt install watchexec
+
+# Arch Linux
+sudo pacman -S watchexec
+```
+
+## Development Mode Detection
+
+Development mode is automatically enabled when:
+* `#{mode => dev}` is explicitly set in server options
+* Running under `rebar3` (detected automatically)
+* `watchexec` is available in the system PATH
+
+## Usage
+
+Most common usage is to start the server with development mode:
+
+```erlang
+% Start server with development mode
+kraft:start(#{port => 8080, mode => dev}, Routes).
+
+% Or let it auto-detect (recommended)
+kraft:start(#{port => 8080}, Routes).
+```
+
+## See Also
+
+- `m:kraft_template` - Template rendering module
+- `m:kraft_instance` - Server instance management
+""".
+
 % API
 -export([maybe_start/1]).
 -export([start_link/0]).
@@ -26,6 +77,14 @@
 
 %--- API -----------------------------------------------------------------------
 
+-doc """
+Conditionally start development mode based on options.
+
+This function checks if development mode should be enabled and starts
+the development server if appropriate. It's called automatically by
+`kraft:start/2` when development mode is detected.
+""".
+-spec maybe_start(#{mode => dev | prod} | map()) -> ok.
 maybe_start(Opts) ->
     case mode(Opts) of
         dev ->
@@ -41,6 +100,14 @@ start_link() ->
         {error, {already_started, Pid}} -> {ok, Pid}
     end.
 
+-doc """
+Watch a specific application's template directory.
+
+Sets up file system monitoring for an application's template directory.
+This function is called automatically by `kraft_instance` when a new
+application is started. It monitors `priv/web/templates/` for changes.
+""".
+-spec watch(atom()) -> ok | {error, watchexec_disabled | enoent}.
 watch(App) ->
     Dir = filename:join(code:lib_dir(App), "priv/web/templates"),
     case persistent_term:get(?MODULE, undefined) of

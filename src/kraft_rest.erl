@@ -1,5 +1,46 @@
 -module(kraft_rest).
 
+-moduledoc """
+REST API handler for Kraft framework.
+
+This module provides a simplified REST handler that automatically routes HTTP 
+requests to appropriate callback functions based on the HTTP method. 
+
+It implements the `m:kraft_handler` behaviour.
+
+## Callbacks
+
+The following callbacks are available (all optional):
+
+* `get/2` - Handle GET requests
+* `post/2` - Handle POST requests  
+* `delete/2` - Handle DELETE requests
+
+## Usage 
+
+```erlang
+-module(my_rest_handler).
+-behaviour(kraft_rest).
+
+-export([get/2]).
+
+ get([<<"users">>], Conn) ->
+     Users = fetch_users(),
+     {respond, Conn, {json, Users}};
+
+```
+
+## Error Handling ==
+
+* Method not allowed (405) - When a callback function is not implemented
+* Not found (404) - When a callback function has no matching clause
+* Not implemented (501) - When an unsupported HTTP method is used
+
+## See Also
+
+- `m:kraft_handler` - Base handler module
+""".
+
 -behaviour(kraft_handler).
 
 % Callbacks
@@ -12,6 +53,7 @@
 
 %--- Callbacks -----------------------------------------------------------------
 
+-spec exec(kraft_conn:conn()) -> kraft:response().
 exec(Conn0) ->
     #{handler := Module, route := Route} = kraft_conn:'_meta'(Conn0),
     handle(Conn0, Module, Route).

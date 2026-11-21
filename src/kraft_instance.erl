@@ -1,5 +1,22 @@
 -module(kraft_instance).
 
+-moduledoc """
+Handles the lifecycle of a single Kraft server instance. 
+
+It abstracts Cowboy server complexity by translating Kraft routes to Cowboy
+dispatch rules (mapping routes to handlers), managing server lifecycle, and
+handling SSL/TLS configuration automatically. 
+
+It also enables development mode for the specified application,
+activating hot reloading and file watching capabilities.
+
+## See Also
+- `kraft:start/2` - High-level server startup
+- `kraft_dev` - Development mode
+- `kraft_handler` - HTTP Request Handler implementation guide
+- `kraft_ws` - WebSocket Handler implementation guide
+""".
+
 -behavior(gen_server).
 
 % API
@@ -17,8 +34,96 @@
 
 -include_lib("kernel/include/logger.hrl").
 
+%--- Types ---------------------------------------------------------------------
+-doc """
+Params include the `app` name, the `routes`, the `owner` and the `opts`.
+- `opts` include:
+    - The port, where the server will listen for requests.
+    - The `ssl_opts`: Checks 
+    [ranch_ssl](https://ninenines.eu/docs/en/ranch/1.7/manual/ranch_ssl/) for
+     more information.
+    - The mode: dev, enables template reloading, hot reloading, debug mode, etc.
+
+The routes are a list of route definitions. Check `t:kraft_instance:route_def/0`
+for more information.
+""".
+-type params() :: #{
+    app := atom(),
+    routes => [route_def()],
+    owner := pid(),
+    opts := #{
+        port := pos_integer(),
+        ssl_opts => [ranch_ssl:opt()],
+        mode => dev | prod
+    }
+}.
+
+-doc """
+Route definition structure for mapping URLs to handlers.
+
+## Route Formats
+
+All of them contains `path`, `handler` and `state`.
+
+- `path` is the URL path pattern (e.g., `"/"`,
+  `"/blog/:blog_id/comment/:comment_id"`).
+- `handler` is the module implementing the handler behaviour or the logic part
+  of the application.
+- `state` is the initial state data passed to the handler.
+
+Some of them contains `options`.
+
+Types:
+- **Standard Handler Route**: `{Path, Handler, State}` or `{Path, Handler, State, Options}`
+- **WebSocket Route**: `{Path, {ws, Handler}, State}` or `{Path, {ws, Handler}, State, WS_Options}`
+- **Static File Route**: `{Path, kraft_static, State}`
+- **Cowboy Handler Route**: `{Path, {cowboy, Module}, State}`
+
+Check the spec for available options.
+""".
+-type route_def() ::
+    {Path :: binary() | string(), module(), kraft_state()}
+    | {
+        Path :: binary() | string(),
+        module(),
+        kraft_state(),
+        route_def_opts()
+    }
+    | {
+        Path :: binary() | string(),
+        {ws, module()},
+        kraft_state()
+    }
+    | {
+        Path :: binary() | string(),
+        {ws, module()},
+        kraft_state(),
+        kraft_ws_opts()
+    }
+    | {Path :: binary() | string(), kraft_static, kraft_state()}
+    | {
+        Path :: binary() | string(),
+        {cowboy, module()},
+        kraft_state()
+    }.
+
+-type route_def_opts() :: #{
+    type => rest | controller,
+    app => atom()
+}.
+
+-type kraft_state() :: map().
+
+-type kraft_ws_opts() :: #{
+    type => raw | json | json_rpc,
+    ping => #{interval => pos_integer()} | disabled
+}.
+
+-type ref() :: pid() | term().
+
 %--- API -----------------------------------------------------------------------
 
+-spec start(params()) -> {ok, ref()} | {error, any()}.
 start(Params) -> kraft_instance_sup:start_instance(Params).
 
 start_link(Params) -> gen_server:start_link(?MODULE, Params, []).

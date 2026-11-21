@@ -1,5 +1,66 @@
 -module(kraft_template).
 
+-moduledoc """
+Template engine for Kraft framework.
+
+This module provides template rendering capabilities using BBMustache templates.
+It handles template parsing, compilation, caching, and hot-reloading for development.
+Templates are stored in the `priv/web/templates/` directory of each application.
+
+## Features
+
+* **Template Parsing**: Parse Mustache template files
+* **Compilation**: Compile templates with context data
+* **Caching**: Automatic template caching for performance
+* **Hot Reloading**: Development mode template updates
+* **Partial Support**: Include other templates with `{{> partial.html }}`
+* **Dependency Tracking**: Track template dependencies for reloading
+
+## Template Location
+
+Templates are stored in:
+
+```
+priv/web/templates/
+|-- index.html.mustache
+|-- users/
+|   |-- list.html.mustache
+|   |-- detail.html.mustache
+|   `-- themes/
+|       |-- default/
+|       |   |-- header.html.mustache
+|       |   `-- footer.html.mustache
+|       `-- admin/
+|           |-- header.html.mustache
+|           `-- footer.html.mustache
+```
+
+## Usage
+
+```erlang
+% Render a template with context
+kraft_template:render(Conn, "users/list.html", #{
+    users => Users,
+    title => "User List"
+}).
+
+% Create a complete HTTP response
+kraft_template:response(Conn, "users/list.html", #{
+    users => Users,
+    title => "User List"
+}).
+
+% Hot reload in development
+kraft_template:reload(my_app, "users/list.html").
+```
+
+## See Also
+
+- `m:kraft_handler` - Base handler module
+- `m:kraft_conn` - Connection module
+- `m:bbmustache` - BBMustache template engine
+""".
+
 -behavior(gen_server).
 
 -include_lib("kernel/include/logger.hrl").
@@ -26,8 +87,38 @@
 
 %--- API -----------------------------------------------------------------------
 
+-doc """
+Start the template engine process.
+
+This function starts the template engine as a gen_server process.
+It initializes the ETS table for dependency tracking and the template cache.
+""".
+-spec start_link() -> {ok, pid()}.
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, undefined, []).
 
+-doc """
+Render a template with context data.
+
+This function renders a template file with the provided context data.
+The template is automatically cached for performance and can include
+partials using `{{> partial.html }}` syntax.
+
+Example:
+```mustache
+{{> themes/default/header.html }}
+
+<main>
+    <h2>Lista de Posts</h2>
+    
+    {{#posts}}
+    {{> themes/default/post_slug.html }}
+    {{/posts}}
+</main>
+
+{{> themes/default/footer.html }}
+```
+""".
+-spec render(kraft_conn:conn(), file:name(), bbmustache:data()) -> binary().
 render(Conn0, RawFile, Context) ->
     App = kraft_conn:'_meta'(Conn0, app),
     File = trim(RawFile),
@@ -36,14 +127,34 @@ render(Conn0, RawFile, Context) ->
     end),
     compile(Template, Context).
 
+-doc """
+Reload a template file (development mode).
+
+This function reloads a template file and updates the cache.
+It's useful during development when you want to see template changes without
+restarting the application. Dependencies are also reloaded.
+""".
+-spec reload(atom(), file:name()) -> ok.
 reload(App, RawFile) -> reload(App, trim(RawFile), main).
 
+-doc """
+Remove a template from cache, forcing it to be re-parsed on the next render call.
+""".
 remove(App, RawFile) ->
     File = trim(RawFile),
     kraft_cache:clear(template, [App, File]),
     ?LOG_INFO(#{template => File, event => removed}, #{kraft_app => App}),
     ok.
 
+-doc """
+Create a complete HTTP response with template.
+
+This function renders a template and creates a complete HTTP response
+with proper content-type headers. It's a convenience function that
+combines `render/3` with response headers.
+""".
+-spec response(kraft_conn:conn(), file:name(), bbmustache:data()) ->
+    kraft_conn:conn().
 response(Conn0, Template, Context) ->
     Body = render(Conn0, Template, Context),
     Conn1 = kraft_conn:response_body(Conn0, Body),
